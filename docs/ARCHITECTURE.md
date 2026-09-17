@@ -28,12 +28,30 @@ apps/api/src/
 │   ├── workspace/         # Phase 05 — root container (PRD §20)
 │   ├── organization/      # Phase 07 — dept/div/team (PRD §24)
 │   ├── communication/     # Phase 08 — channel+message (PRD §28)
+│   ├── realtime/          # Phase 09 — WS gateway (ADR-004)
 │   ├── file/              # Phase 10 — upload/download (PRD §32)
 │   ├── meeting/           # Phase 11-12 — meeting+notes (PRD §34)
 │   └── project/           # Phase 13-14 — project+task (PRD §38)
-├── infrastructure/prisma/ # satu-satunya DB connection
+├── infrastructure/
+│   ├── prisma/            # satu-satunya DB connection
+│   └── realtime/          # registry Socket.IO server
 └── shared/                # pipes, filter, env
 packages/shared/           # kontrak lintas app: errors, permissions
+```
+
+## 2b. Realtime Flow (ADR-004)
+
+```
+CLIENT ── handshake(auth.token) ──► middleware validasi session
+                                        │ invalid → connect_error
+                                        │ valid   → socket.data.userId
+CLIENT ── workspace.join ────────► membership check (AuthorizationService)
+                                        │ ok  → join room ws:<id> + presence
+                                        │ no  → FORBIDDEN
+CLIENT ── typing.start/stop ─────► permission message.send + TTL 6s
+HTTP POST /messages ──► CommunicationService ──► commit DB
+                                        └──► RealtimeBroadcaster
+                                               └──► room ws:<id>: message.created
 ```
 
 ## 3. Request Flow (PRD §55, §19)
@@ -75,13 +93,13 @@ Workspace 1──* AuditLog
 
 ```
 Foundation → Identity → Authentication → Tenant → Workspace →
-Authorization → Organization → Communication → File → Meeting →
-Notes → Project → Task          ✅ (API, tanpa realtime)
+Authorization → Organization → Communication → Realtime → File →
+Meeting → Notes → Project → Task   ✅ (API lengkap P0)
 ```
 
 ## 6. Berikutnya (urutan tetap)
 
 ```
-Realtime (WebSocket) → E2E tests → Audit service →
-Calendar → Attendance → Request/Approval → Notification → Search
+Audit service → Calendar → Attendance → Request/Approval →
+Notification → Search → apps/web (design system custom)
 ```

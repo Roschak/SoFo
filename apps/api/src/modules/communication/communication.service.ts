@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../infrastructure/prisma/prisma.service';
 import { AuthorizationService } from '../authorization/authorization.service';
+import { RealtimeBroadcaster } from '../realtime/realtime.broadcaster';
 import { conflict, forbidden, notFound } from '@sofo/shared';
 
 /**
@@ -12,6 +13,7 @@ export class CommunicationService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly authorizationService: AuthorizationService,
+    private readonly realtimeBroadcaster: RealtimeBroadcaster,
   ) {}
 
   async createChannel(
@@ -84,7 +86,9 @@ export class CommunicationService {
       },
       include: MESSAGE_INCLUDE,
     });
-    return this.toMessageView(message);
+    const view = this.toMessageView(message);
+    this.realtimeBroadcaster.broadcastMessageCreated(workspaceId, view);
+    return view;
   }
 
   async listMessages(
@@ -139,7 +143,9 @@ export class CommunicationService {
       data: { content, editedAt: new Date() },
       include: MESSAGE_INCLUDE,
     });
-    return this.toMessageView(updated);
+    const view = this.toMessageView(updated);
+    this.realtimeBroadcaster.broadcastMessageUpdated(workspaceId, view);
+    return view;
   }
 
   async deleteMessage(actorId: string, workspaceId: string, messageId: string) {
@@ -159,6 +165,10 @@ export class CommunicationService {
     await this.prisma.message.update({
       where: { id: messageId },
       data: { deletedAt: new Date() },
+    });
+    this.realtimeBroadcaster.broadcastMessageDeleted(workspaceId, {
+      messageId,
+      channelId: message.channelId,
     });
     return { success: true };
   }

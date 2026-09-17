@@ -13,6 +13,7 @@ import { CommunicationModule } from './modules/communication/communication.modul
 import { FileModule } from './modules/file/file.module';
 import { MeetingModule } from './modules/meeting/meeting.module';
 import { ProjectModule } from './modules/project/project.module';
+import { RealtimeModule } from './modules/realtime/realtime.module';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { ProjectModule } from './modules/project/project.module';
     FileModule,
     MeetingModule,
     ProjectModule,
+    RealtimeModule,
   ],
   providers: [{ provide: APP_FILTER, useClass: SofoExceptionFilter }],
 })

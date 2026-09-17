@@ -35,7 +35,11 @@ describe('CommunicationService', () => {
       workspace: { findUniqueOrThrow: jest.fn() },
     };
     authorizationService = { assertPermission: jest.fn() };
-    service = new CommunicationService(prisma as never, authorizationService as never);
+    service = new CommunicationService(
+      prisma as never,
+      authorizationService as never,
+      { broadcastMessageCreated: jest.fn(), broadcastMessageUpdated: jest.fn(), broadcastMessageDeleted: jest.fn() } as never,
+    );
   });
 
   describe('editMessage', () => {

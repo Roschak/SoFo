@@ -15,7 +15,7 @@
 | 06 Authorization | authorization/ | ✅ DONE | ✅ | ✅ | PermissionGuard global |
 | 07 Organization | organization/ | ✅ DONE | ✅ | ✅ | enterprise mode only |
 | 08 Communication | communication/ | ✅ DONE | ✅ | ✅ | channel + message + thread |
-| 09 Realtime | — | ⬜ NOT STARTED | — | — | P1, butuh websocket gateway |
+| 09 Realtime | realtime/ | ✅ DONE | ✅ | ✅ | Socket.IO, ADR-004, 15 E2E checks |
 | 10 File | file/ | ✅ DONE | ✅ | ✅ | disk lokal, 25MB limit |
 | 11 Meeting | meeting/ | ✅ DONE | ✅ | ✅ | lifecycle + notes |
 | 12 Live Notes | meeting/ (notes) | ✅ DONE | ✅ | ✅ | per-author note |
@@ -47,7 +47,7 @@
 - [x] Permission
 - [x] Channel
 - [x] Message
-- [ ] Realtime ← **satu-satunya P0 yang belum selesai (butuh WebSocket gateway)**
+- [x] Realtime (Socket.IO gateway + presence + typing, ADR-004)
 - [x] File
 - [x] Basic Meeting
 - [x] Project
@@ -77,8 +77,17 @@
 
 ## Known Gaps (jujur, bukan fake completion — PRD §104)
 
-- Realtime (P0) belum dibangun → lanjut sesi berikutnya
-- E2E test HTTP flow belum ditulis (unit tests service-layer sudah ada)
-- Migration Prisma belum dijalankan (butuh Docker Postgres aktif)
 - Frontend web belum dibangun (design system custom, lihat ADR-003)
 - CI pipeline belum dibuat
+- Realtime socket state in-memory — multi-instance scaling butuh Redis adapter (P2)
+- Calendar/Attendance/Request/Approval/Notification/Search/Admin = P1, belum dimulai
+
+## Verifikasi Terakhir (2026-09-17)
+
+| Check | Hasil |
+|---|---|
+| Unit tests | 45/45 pass (37 API + 8 shared) |
+| HTTP E2E (`test/http-smoke.mjs`) | 41/41 pass |
+| Realtime E2E (`test/realtime-smoke.mjs`) | 15/15 pass |
+| Lint / typecheck / build | 0 error |
+| Migration | init_p0 applied (Postgres :5433) |

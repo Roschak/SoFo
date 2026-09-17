@@ -82,6 +82,40 @@ npm run dev -w @sofo/api               # server di :3001
 
 ---
 
+## Sesi #1c — 2026-09-17 (lanjutan): Realtime P0 — SELESAI
+
+### Yang sudah selesai
+- ADR-004 (desain realtime) → RealtimeModule: gateway Socket.IO + service
+  presence/typing (TTL 6s) + broadcaster
+- Auth handshake via middleware socket.io — koneksi ditolak SEBELUM accept jika
+  token invalid (mencegah race condition event vs auth, PRD §33)
+- Room = tenant boundary: `ws:<id>` join server-side + membership check;
+  `user:<id>` reserved untuk notification P1
+- Join/leave idempotent per socket (duplicate join tidak double-count presence)
+- Broadcast dari CommunicationService SETELAH commit DB: message.created /
+  message.updated / message.deleted
+- presence.updated otomatis saat join/leave/disconnect; typing.updated TTL
+
+### Bug yang ditemukan E2E dan diperbaiki
+1. Race condition: `workspace.join` bisa dieksekusi sebelum `handleConnection`
+   async selesai → auth dipindah ke handshake middleware.
+2. Double-count presence pada join duplikat → idempotent join/leave.
+3. socket.io mengosongkan rooms sebelum `handleDisconnect` → tracking manual
+   `joinedWorkspaces` Map per socket id.
+
+### Hasil verifikasi
+- Realtime E2E (`test/realtime-smoke.mjs`, 2 user): **15/15 pass**
+- Regression HTTP (`test/http-smoke.mjs`): 41/41 pass
+- Unit: 45/45, lint 0, typecheck 0, build OK
+
+### Yang BELUM selesai (lanjutkan di sini)
+1. Audit service + viewer (PRD §49) — model sudah ada
+2. apps/web frontend (design system custom, ADR-003)
+3. CI pipeline (PRD §134)
+4. Redis adapter untuk socket scaling multi-instance (P2)
+
+---
+
 ## Template entri baru (copy saat mulai sesi)
 
 ```
