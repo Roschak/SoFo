@@ -1,0 +1,38 @@
+.avatar {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--sofo-r-full);
+  color: #fff;
+  font-weight: 700;
+  flex-shrink: 0;
+  user-select: none;
+}
+
+.avatar--md {
+  width: 36px;
+  height: 36px;
+  font-size: var(--sofo-fs-sm);
+}
+
+.avatar--sm {
+  width: 26px;
+  height: 26px;
+  font-size: var(--sofo-fs-xs);
+}
+
+.avatar__dot {
+  position: absolute;
+  right: -2px;
+  bottom: -2px;
+  width: 10px;
+  height: 10px;
+  border-radius: var(--sofo-r-full);
+  background: var(--sofo-ink-600);
+  border: 2px solid var(--sofo-ink-950);
+}
+
+.avatar__dot--online {
+  background: var(--sofo-success);
+}

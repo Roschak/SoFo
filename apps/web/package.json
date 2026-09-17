@@ -1,0 +1,33 @@
+{
+  "name": "@sofo/web",
+  "version": "0.1.0",
+  "private": true,
+  "description": "SOFO Web — React SPA with a fully custom design system (ADR-003)",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -p tsconfig.json --noEmit && vite build",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "eslint \"src/**/*.{ts,tsx}\"",
+    "test": "vitest run --config vitest.config.ts",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@sofo/shared": "0.1.0",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "socket.io-client": "4.8.1"
+  },
+  "devDependencies": {
+    "@types/react": "18.3.18",
+    "@types/react-dom": "18.3.5",
+    "@typescript-eslint/eslint-plugin": "7.18.0",
+    "@typescript-eslint/parser": "7.18.0",
+    "@vitejs/plugin-react": "4.3.4",
+    "eslint": "8.57.1",
+    "eslint-plugin-react-hooks": "^4.6.2",
+    "typescript": "5.6.3",
+    "vite": "6.0.7",
+    "vitest": "2.1.8"
+  }
+}

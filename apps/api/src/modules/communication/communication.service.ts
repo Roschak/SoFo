@@ -202,6 +202,7 @@ export class CommunicationService {
       id: message.id,
       channelId: message.channelId,
       authorId: message.authorId,
+      authorName: message.author.displayName,
       content: message.content,
       replyToId: message.replyToId,
       editedAt: message.editedAt,
@@ -217,6 +218,7 @@ export class CommunicationService {
 }
 
 const MESSAGE_INCLUDE = {
+  author: { select: { displayName: true } },
   attachments: {
     where: { deletedAt: null },
     select: { id: true, fileName: true, mimeType: true, sizeBytes: true },
@@ -231,5 +233,6 @@ type MessageWithRelations = {
   replyToId: string | null;
   editedAt: Date | null;
   createdAt: Date;
+  author: { displayName: string };
   attachments: { id: string; fileName: string; mimeType: string; sizeBytes: number }[];
 };

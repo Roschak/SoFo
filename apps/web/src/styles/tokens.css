@@ -1,0 +1,74 @@
+/*
+ * SOFO Design Tokens — ADR-003 (custom design system, no UI kit).
+ * Single source of truth for every visual decision in the app.
+ */
+:root {
+  /* ── Color: brand ─────────────────────────────── */
+  --sofo-accent-900: #1e1b4b;
+  --sofo-accent-700: #4338ca;
+  --sofo-accent-600: #4f46e5;
+  --sofo-accent-500: #6366f1;
+  --sofo-accent-200: #c7d2fe;
+  --sofo-accent-100: #e0e7ff;
+
+  /* ── Color: neutrals (dark UI) ────────────────── */
+  --sofo-ink-1000: #0b0c10;
+  --sofo-ink-950: #111318;
+  --sofo-ink-900: #171a21;
+  --sofo-ink-800: #1f232d;
+  --sofo-ink-700: #2a2f3b;
+  --sofo-ink-600: #3a4150;
+  --sofo-text-100: #f3f5f9;
+  --sofo-text-300: #c4cad6;
+  --sofo-text-500: #8b93a3;
+  --sofo-text-600: #6b7382;
+
+  /* ── Color: semantic ──────────────────────────── */
+  --sofo-success: #34d399;
+  --sofo-danger: #f87171;
+  --sofo-warning: #fbbf24;
+  --sofo-info: #60a5fa;
+
+  /* ── Typography ───────────────────────────────── */
+  --sofo-font: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --sofo-fs-xs: 0.75rem;
+  --sofo-fs-sm: 0.8125rem;
+  --sofo-fs-md: 0.875rem;
+  --sofo-fs-lg: 1rem;
+  --sofo-fs-xl: 1.25rem;
+  --sofo-fs-2xl: 1.75rem;
+
+  /* ── Spacing scale (4px base) ─────────────────── */
+  --sofo-sp-1: 4px;
+  --sofo-sp-2: 8px;
+  --sofo-sp-3: 12px;
+  --sofo-sp-4: 16px;
+  --sofo-sp-5: 20px;
+  --sofo-sp-6: 24px;
+  --sofo-sp-8: 32px;
+  --sofo-sp-10: 40px;
+
+  /* ── Radius ───────────────────────────────────── */
+  --sofo-r-sm: 6px;
+  --sofo-r-md: 10px;
+  --sofo-r-lg: 14px;
+  --sofo-r-full: 9999px;
+
+  /* ── Elevation ────────────────────────────────── */
+  --sofo-shadow-1: 0 1px 2px rgb(0 0 0 / 0.4);
+  --sofo-shadow-2: 0 8px 24px rgb(0 0 0 / 0.45);
+  --sofo-shadow-3: 0 16px 48px rgb(0 0 0 / 0.55);
+
+  /* ── Layout ───────────────────────────────────── */
+  --sofo-sidebar-w: 280px;
+  --sofo-memberbar-w: 240px;
+
+  /* ── Motion ───────────────────────────────────── */
+  --sofo-ease: cubic-bezier(0.2, 0, 0, 1);
+  --sofo-dur-fast: 120ms;
+  --sofo-dur-med: 220ms;
+
+  /* ── Z-index ──────────────────────────────────── */
+  --sofo-z-modal: 100;
+  --sofo-z-toast: 200;
+}

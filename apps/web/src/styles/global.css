@@ -1,0 +1,52 @@
+@import './tokens.css';
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+* {
+  margin: 0;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  font-family: var(--sofo-font);
+  font-size: var(--sofo-fs-md);
+  color: var(--sofo-text-100);
+  background: var(--sofo-ink-1000);
+  -webkit-font-smoothing: antialiased;
+}
+
+button,
+input,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+a {
+  color: var(--sofo-accent-500);
+}
+
+/* Accessible focus ring everywhere (PRD §127 keyboard navigation). */
+:focus-visible {
+  outline: 2px solid var(--sofo-accent-500);
+  outline-offset: 2px;
+  border-radius: var(--sofo-r-sm);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

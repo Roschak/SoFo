@@ -1,0 +1,38 @@
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sofo-sp-2);
+}
+
+.field__label {
+  font-size: var(--sofo-fs-sm);
+  font-weight: 600;
+  color: var(--sofo-text-300);
+}
+
+.field__input {
+  background: var(--sofo-ink-900);
+  border: 1px solid var(--sofo-ink-700);
+  border-radius: var(--sofo-r-md);
+  padding: var(--sofo-sp-3) var(--sofo-sp-4);
+  color: var(--sofo-text-100);
+  transition: border-color var(--sofo-dur-fast) var(--sofo-ease);
+}
+
+.field__input::placeholder {
+  color: var(--sofo-text-600);
+}
+
+.field__input:focus {
+  border-color: var(--sofo-accent-500);
+  outline: none;
+}
+
+.field__input--invalid {
+  border-color: var(--sofo-danger);
+}
+
+.field__error {
+  font-size: var(--sofo-fs-xs);
+  color: var(--sofo-danger);
+}

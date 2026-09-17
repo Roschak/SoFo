@@ -5,6 +5,20 @@
 
 ---
 
+## ⚠️ STOP DIMINTA OWNER — akhir Sesi #1c (2026-09-17)
+
+Status berhenti: perbaikan `authorName` pada message API BELUM lolos E2E.
+Blocker: Prisma client perlu regenerate (relasi `author` belum dikenali).
+
+**Baca folder `docs/notes/` — dibuat khusus untuk ini:**
+- `01-SUDAH-DIKERJAKAN.md` — semua yang selesai
+- `02-SEDANG-DIKERJAKAN.md` — RESUME DI SINI + langkah persis + alternatif
+- `03-BELUM-DIKERJAKAN.md` — peta kerja ke depan
+
+Server API :4001 sudah dimatikan. DB Docker :5433 dibiarkan hidup.
+
+---
+
 ## Sesi #1 — 2026-09-17 — Bootstrap Foundation + MVP P0 (API)
 
 ### STATUS AKHIR SESI (verifikasi end-to-end sudah dijalankan)
