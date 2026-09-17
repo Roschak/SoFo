@@ -24,6 +24,21 @@ cp apps/api/.env.example apps/api/.env
 cd apps/api && npx prisma migrate dev --name init_p0
 ```
 
+### Sesi #1b — 2026-09-17 (lanjutan): E2E via HTTP — SELESAI
+- Migration `init_p0` ✅ applied (port DB digeser ke 5433, API ke 4001 karena
+  port 5432/3001 dipakai project lain di mesin ini — jangan dikembalikan)
+- ⚠️ **OS env `DATABASE_URL` global (project aegis) menimpa .env** → selalu
+  override inline: `DATABASE_URL=postgresql://sofo:sofo_dev@localhost:5433/sofo?schema=public`
+- **2 bug ditemukan & diperbaiki oleh E2E:**
+  1. `validateSession`/`logout` mencari token mentah padahal tersimpan ter-hash
+     → sekarang `hashToken(token)` dipakai di lookup (security-relevant!)
+  2. ValidationPipe `BadRequestException` lolos filter → 500; filter sekarang
+     menormalkan HttpException Nest ke body standar SOFO tanpa kehilangan status
+- Smoke test `apps/api/test/http-smoke.mjs`: **41/41 PASS** (auth, workspace,
+  member, channel, message+thread, edit/delete policy, project, task+assignee,
+  meeting lifecycle, notes, file upload/download, tenant isolation, logout)
+- Cara jalankan: `node apps/api/test/http-smoke.mjs` (server harus live di :4001)
+
 ### Keputusan owner
 - Stack dipilihkan oleh agent (mandat owner): **NestJS + React + PostgreSQL + Prisma**
 - UI: **modern, custom design system, BUKAN template** (lihat ADR-003)

@@ -72,14 +72,14 @@ export class AuthenticationService {
 
   async logout(token: string): Promise<void> {
     await this.prisma.session.updateMany({
-      where: { token, revokedAt: null },
+      where: { token: hashToken(token), revokedAt: null },
       data: { revokedAt: new Date() },
     });
   }
 
   async validateSession(token: string): Promise<AuthenticatedUser> {
     const session = await this.prisma.session.findUnique({
-      where: { token },
+      where: { token: hashToken(token) },
       include: { user: true },
     });
     if (!session || session.revokedAt || session.expiresAt <= new Date()) {
