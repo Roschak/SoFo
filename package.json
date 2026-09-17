@@ -1,0 +1,24 @@
+{
+  "name": "sofo-platform",
+  "version": "0.1.0",
+  "private": true,
+  "description": "SOFO (SOULOFFICE) — All-in-One Digital Office & Community Ecosystem",
+  "license": "UNLICENSED",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "lint": "npm run lint --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "build": "npm run build --workspace apps/api --workspace apps/web --if-present",
+ "prepare": "npm run build -w @sofo/shared"
+  },
+  "devDependencies": {
+    "prettier": "3.6.2"
+  }
+}

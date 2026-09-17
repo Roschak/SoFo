@@ -1,0 +1,329 @@
+// SOFO data model — root-first per PRD §8: identity → auth → tenant → workspace →
+// authorization → organization → communication → file → meeting → project/task.
+// Every tenant-owned row carries workspaceId so tenant isolation is enforced by query shape.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── 02 IDENTITY & 03 USER ────────────────────────────────────────────────────
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  displayName  String
+  passwordHash String
+  status       UserStatus @default(ACTIVE)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  sessions         Session[]
+  workspaceMembers WorkspaceMember[]
+  auditLogs        AuditLog[]
+
+  @@index([email])
+}
+
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+  DEACTIVATED
+}
+
+// ─── 04 AUTHENTICATION ───────────────────────────────────────────────────────
+
+model Session {
+  id           String   @id @default(uuid())
+  token        String   @unique
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt    DateTime
+  revokedAt    DateTime?
+  createdAt    DateTime @default(now())
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+// ─── 05-06 TENANT & WORKSPACE ────────────────────────────────────────────────
+
+model Workspace {
+  id          String        @id @default(uuid())
+  name        String
+  slug        String        @unique
+  description String?
+  mode        WorkspaceMode @default(COMMUNITY)
+  ownerId     String
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  members     WorkspaceMember[]
+  roles       Role[]
+  orgUnits    OrgUnit[]
+  channels    Channel[]
+  files       File[]
+  projects    Project[]
+  meetings    Meeting[]
+  auditLogs   AuditLog[]
+
+  @@index([ownerId])
+}
+
+enum WorkspaceMode {
+  ENTERPRISE
+  COMMUNITY
+}
+
+model WorkspaceMember {
+  id          String   @id @default(uuid())
+  workspaceId String
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  roleId      String
+  role        Role     @relation(fields: [roleId], references: [id])
+  joinedAt    DateTime @default(now())
+
+  @@unique([workspaceId, userId])
+  @@index([userId])
+}
+
+// ─── 07-08 ROLE & PERMISSION (custom roles per PRD §26) ─────────────────────
+
+model Role {
+  id          String  @id @default(uuid())
+  workspaceId String
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  name        String
+  isSystem    Boolean @default(false)
+  permissions String[]
+
+  members WorkspaceMember[]
+
+  @@unique([workspaceId, name])
+}
+
+// ─── 07 ORGANIZATION (Enterprise Mode, PRD §22-§24) ─────────────────────────
+
+model OrgUnit {
+  id          String   @id @default(uuid())
+  workspaceId String
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  name        String
+  kind        OrgUnitKind @default(DEPARTMENT)
+  parentId    String?
+  parent      OrgUnit?  @relation("OrgUnitTree", fields: [parentId], references: [id], onDelete: SetNull)
+  children    OrgUnit[] @relation("OrgUnitTree")
+  createdAt   DateTime @default(now())
+
+  @@index([workspaceId])
+}
+
+enum OrgUnitKind {
+  DEPARTMENT
+  DIVISION
+  TEAM
+}
+
+// ─── 09-11 COMMUNICATION: CHANNEL & MESSAGE ─────────────────────────────────
+
+model Channel {
+  id          String      @id @default(uuid())
+  workspaceId String
+  workspace   Workspace   @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  name        String
+  type        ChannelType @default(TEXT)
+  visibility  ChannelVisibility @default(PUBLIC)
+  topic       String?
+  createdById String
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  messages Message[]
+
+  @@unique([workspaceId, name])
+  @@index([workspaceId])
+}
+
+enum ChannelType {
+  TEXT
+  VOICE
+  ANNOUNCEMENT
+}
+
+enum ChannelVisibility {
+  PUBLIC
+  PRIVATE
+}
+
+model Message {
+  id          String    @id @default(uuid())
+  channelId   String
+  channel     Channel   @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  authorId    String
+  content     String
+  replyToId   String?
+  replyTo     Message?  @relation("MessageThread", fields: [replyToId], references: [id], onDelete: SetNull)
+  replies     Message[] @relation("MessageThread")
+  attachments File[]    @relation("MessageAttachments")
+  editedAt    DateTime?
+  deletedAt   DateTime?
+  createdAt   DateTime  @default(now())
+
+  @@index([channelId, createdAt])
+}
+
+// ─── 12 FILE ─────────────────────────────────────────────────────────────────
+
+model File {
+  id          String    @id @default(uuid())
+  workspaceId String
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  uploaderId  String
+  fileName    String
+  mimeType    String
+  sizeBytes   Int
+  storagePath String
+  messageId   String?
+  message     Message?  @relation("MessageAttachments", fields: [messageId], references: [id], onDelete: SetNull)
+  deletedAt   DateTime?
+  createdAt   DateTime  @default(now())
+
+  @@index([workspaceId])
+  @@index([messageId])
+}
+
+// ─── 13-14 MEETING & LIVE NOTES ──────────────────────────────────────────────
+
+model Meeting {
+  id          String       @id @default(uuid())
+  workspaceId String
+  workspace   Workspace    @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  title       String
+  description String?
+  status      MeetingStatus @default(SCHEDULED)
+  scheduledAt DateTime
+  startedAt   DateTime?
+  endedAt     DateTime?
+  hostId      String
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  participants MeetingParticipant[]
+  notes        MeetingNote[]
+
+  @@index([workspaceId, scheduledAt])
+}
+
+enum MeetingStatus {
+  SCHEDULED
+  ACTIVE
+  ENDED
+  ARCHIVED
+}
+
+model MeetingParticipant {
+  id        String   @id @default(uuid())
+  meetingId String
+  meeting   Meeting  @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  userId    String
+  joinedAt  DateTime @default(now())
+
+  @@unique([meetingId, userId])
+}
+
+model MeetingNote {
+  id        String   @id @default(uuid())
+  meetingId String
+  meeting   Meeting  @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  content   String
+  authorId  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([meetingId])
+}
+
+// ─── 15-16 PROJECT & TASK ────────────────────────────────────────────────────
+
+model Project {
+  id          String       @id @default(uuid())
+  workspaceId String
+  workspace   Workspace    @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  name        String
+  description String?
+  status      ProjectStatus @default(ACTIVE)
+  priority    Priority     @default(MEDIUM)
+  deadline    DateTime?
+  ownerId     String
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  tasks Task[]
+
+  @@index([workspaceId])
+}
+
+enum ProjectStatus {
+  PLANNING
+  ACTIVE
+  COMPLETED
+  ARCHIVED
+}
+
+model Task {
+  id          String      @id @default(uuid())
+  projectId   String
+  project     Project     @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  title       String
+  description String?
+  status      TaskStatus  @default(TO_DO)
+  priority    Priority    @default(MEDIUM)
+  assigneeId  String?
+  deadline    DateTime?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  @@index([projectId, status])
+  @@index([assigneeId])
+}
+
+enum TaskStatus {
+  TO_DO
+  IN_PROGRESS
+  REVIEW
+  DONE
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+// ─── 23 AUDIT ────────────────────────────────────────────────────────────────
+
+model AuditLog {
+  id          String   @id @default(uuid())
+  workspaceId String?
+  workspace   Workspace? @relation(fields: [workspaceId], references: [id], onDelete: SetNull)
+  actorId     String?
+  actor       User?    @relation(fields: [actorId], references: [id], onDelete: SetNull)
+  action      String
+  target      String
+  result      AuditResult @default(SUCCESS)
+  metadata    Json?
+  createdAt   DateTime @default(now())
+
+  @@index([workspaceId, createdAt])
+}
+
+enum AuditResult {
+  SUCCESS
+  FAILURE
+}
