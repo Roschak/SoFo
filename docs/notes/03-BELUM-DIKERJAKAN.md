@@ -22,7 +22,11 @@
       notification system §89); "company event" dari PRD §41 dipetakan ke manual
       event biasa.
 - [ ] Attendance: clock in/out, history, late status (PRD §87) — enterprise only
-- [ ] Request & Approval workflow (PRD §88)
+- [x] Request & Approval workflow (PRD §88) → SELESAI Sesi #2g (commit `8b28b2f`):
+      model Request (5 tipe §44) + lifecycle PENDING→APPROVED/REJECTED/CANCELLED,
+      self-approval ban, list scoping (approver lihat semua, lainnya miliknya),
+      audit semua transisi. Notifikasi ke requester menunggu §89.
+      Catatan: UI web requests belum dibuat.
 - [ ] Notification system terpusat dari event (PRD §89) — butuh ADR event bus;
       room `user:<id>` sudah disiapkan di ADR-004
 - [ ] Global search authorization-aware (PRD §90)

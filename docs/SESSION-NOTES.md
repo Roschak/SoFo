@@ -89,6 +89,22 @@
 - Belum: push-notif reminder (§89), recurrence/event berulang.
 - Commit: `411307f`
 
+### Sesi #2g — 2026-09-18 — Request & Approval (PRD §88) — SELESAI ✅
+- Model `Request` (tipe §44: LEAVE/REIMBURSEMENT/OPERATIONAL/DOCUMENT/PERMISSION)
+  + migration; endpoint create/list/approve/reject/cancel di
+  `/workspaces/:id/requests`.
+- Aturan: `request.create` utk buat/lihat; `request.approve` utk putuskan;
+  **self-approval ban** (403), decide ulang (409), cancel hanya requester & saat
+  PENDING; list: approver lihat semua, non-approver lihat request sendiri
+  (helper baru `AuthorizationService.hasPermission`).
+- Audit semua transisi: request.create/approve/reject/cancel (PRD §45 hop audit).
+- **Gotcha Nest ValidationPipe**: field optional di DTO body WAJIB `@IsOptional()`,
+  kalau tidak `body: {}` → VALIDATION_ERROR 400 (dua kali kena: audit `limit`,
+  request `note`). Untuk query param numerik pakai `@Type(() => Number)`.
+- Verifikasi: http-smoke **69/69** (+13), API unit **61/61** (+12), realtime 15/15,
+  lint/typecheck/build hijau.
+- Commit: `8b28b2f`
+
 ---
 
 ## ⚠️ STOP DIMINTA OWNER — akhir Sesi #1c (2026-09-17)
