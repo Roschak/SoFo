@@ -25,7 +25,7 @@
 - Docker Desktop perlu dinyalakan manual dulu (daemon tidak auto-start);
   lokasi exe: `%LOCALAPPDATA%\Programs\DockerDesktop\Docker Desktop.exe`.
 - File sampah `how --stat` di repo root TIDAK ikut di-commit (sisa typo shell);
-  boleh dihapus owner.
+  sudah dihapus di Sesi #2d.
 
 ### Sesi #2b — 2026-09-18 — Meetings + Live Notes UI — SELESAI ✅
 - Web: `MeetingContext` (state + lifecycle + join + notes polling 5s),
@@ -53,6 +53,10 @@
 ### Yang BELUM selesai (lanjutkan di sini)
 - Lihat `docs/notes/03-BELUM-DIKERJAKAN.md` — P1 berikutnya: calendar,
   attendance, approval, notification, global search, admin dashboard.
+
+### Sesi #2d — 2026-09-18 — Kerapian — SELESAI ✅
+- File sampah `how --stat` di repo root dihapus (untracked, sisa typo shell;
+  tidak ada perubahan git).
 
 ---
 
