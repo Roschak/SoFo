@@ -8,11 +8,12 @@ import { Avatar } from '../../components/ui/Avatar';
 import { ChannelView } from './ChannelView';
 import { MeetingsView } from './MeetingsView';
 import { AuditView } from './AuditView';
+import { CalendarView } from './CalendarView';
 import { canViewAudit } from '../../lib/audit-view';
 import './ChatShell.css';
 
 type Dialog = 'none' | 'workspace' | 'channel';
-type View = 'chat' | 'meetings' | 'audit';
+type View = 'chat' | 'meetings' | 'audit' | 'calendar';
 
 export function ChatShell() {
   const { session, logout } = useAuth();
@@ -159,6 +160,15 @@ export function ChatShell() {
                   Meetings
                 </button>
               </li>
+              <li>
+                <button
+                  className={`shell__item${view === 'calendar' ? ' shell__item--active' : ''}`}
+                  onClick={() => setView('calendar')}
+                >
+                  <span className="shell__hash">▤</span>
+                  Kalender
+                </button>
+              </li>
               {auditVisible ? (
                 <li>
                   <button
@@ -186,6 +196,8 @@ export function ChatShell() {
       <main className="shell__main">
         {view === 'meetings' && activeWorkspace ? (
           <MeetingsView key={activeWorkspace.id} />
+        ) : view === 'calendar' && activeWorkspace ? (
+          <CalendarView key={activeWorkspace.id} />
         ) : view === 'audit' && activeWorkspace && auditVisible ? (
           <AuditView key={activeWorkspace.id} />
         ) : activeChannel && activeWorkspace ? (

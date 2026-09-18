@@ -50,6 +50,8 @@ export const SOFO_PERMISSIONS = [
   'request.approve',
   // audit (PRD §49)
   'audit.view',
+  // calendar (PRD §41, §86)
+  'calendar.event.create',
 ] as const;
 
 export type SofoPermission = (typeof SOFO_PERMISSIONS)[number];
@@ -106,6 +108,7 @@ export const DEFAULT_ROLE_PERMISSIONS: Readonly<Record<SofoRole, readonly SofoPe
     'task.delete',
     'request.approve',
     'audit.view',
+    'calendar.event.create',
   ],
   STAFF: [
     'workspace.view',

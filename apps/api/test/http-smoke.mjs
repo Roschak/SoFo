@@ -366,6 +366,79 @@ async function main() {
   });
   check('outsider list audit 403', auditOutsider.status === 403);
 
+  console.log('\n=== 6c. CALENDAR (PRD §41, §86) ===');
+  const eventTitle = `Review QA ${unique}`;
+  const calCreate = await call('POST', `/workspaces/${workspaceId}/calendar/events`, {
+    token: ownerToken,
+    workspaceId,
+    body: {
+      title: eventTitle,
+      startAt: '2026-09-25T09:00:00.000Z',
+      endAt: '2026-09-25T11:00:00.000Z',
+    },
+  });
+  check('owner create calendar event 201', calCreate.status === 201, JSON.stringify(calCreate.data));
+  const calEventId = calCreate.data.id;
+
+  const calStaff = await call('POST', `/workspaces/${workspaceId}/calendar/events`, {
+    token: staffToken,
+    workspaceId,
+    body: {
+      title: 'Staff event',
+      startAt: '2026-09-26T09:00:00.000Z',
+      endAt: '2026-09-26T10:00:00.000Z',
+    },
+  });
+  check('staff create event 403 (tanpa calendar.event.create)', calStaff.status === 403);
+
+  const calBad = await call('POST', `/workspaces/${workspaceId}/calendar/events`, {
+    token: ownerToken,
+    workspaceId,
+    body: { title: 'Backwards', startAt: '2026-09-26T10:00:00.000Z', endAt: '2026-09-26T09:00:00.000Z' },
+  });
+  check('event endAt < startAt 409 CONFLICT', calBad.status === 409);
+
+  // meeting (section 5) + manual event harus muncul di calendar agregat
+  const calendar = await call(
+    'GET',
+    `/workspaces/${workspaceId}/calendar?from=2026-09-01T00:00:00.000Z&to=2026-10-31T23:59:59.000Z`,
+    { token: staffToken, workspaceId },
+  );
+  const calKinds = new Set((calendar.data?.items ?? []).map((item) => item.kind));
+  check(
+    'staff GET calendar 200 — meeting + event teragregasi urut',
+    calendar.status === 200 && calKinds.has('meeting') && calKinds.has('event'),
+    JSON.stringify(calendar.data),
+  );
+  const calSorted = (calendar.data?.items ?? []).every(
+    (item, index, arr) => index === 0 || arr[index - 1].startAt <= item.startAt,
+  );
+  check('calendar terurut ascending by startAt', calSorted);
+
+  const reminders = await call('GET', `/workspaces/${workspaceId}/calendar/reminders?horizonDays=90`, {
+    token: staffToken,
+    workspaceId,
+  });
+  check(
+    'reminders 200 dengan dueInDays >= 0',
+    reminders.status === 200 &&
+      reminders.data.items.length > 0 &&
+      reminders.data.items.every((item) => item.dueInDays >= 0),
+    JSON.stringify(reminders.data),
+  );
+
+  const calDelete = await call('DELETE', `/workspaces/${workspaceId}/calendar/events/${calEventId}`, {
+    token: ownerToken,
+    workspaceId,
+  });
+  check('owner delete event 200', calDelete.status === 200);
+
+  const calOutsider = await call('GET', `/workspaces/${workspaceId}/calendar`, {
+    token: outsiderToken,
+    workspaceId,
+  });
+  check('outsider GET calendar 403', calOutsider.status === 403);
+
   console.log('\n=== 7. LOGOUT ===');
   const logout = await call('DELETE', '/auth/session', { token: staffToken });
   check('logout 200/201', logout.status === 200 || logout.status === 201);

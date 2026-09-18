@@ -70,6 +70,7 @@ model Workspace {
   files       File[]
   projects    Project[]
   meetings    Meeting[]
+  calendarEvents CalendarEvent[]
   auditLogs   AuditLog[]
 
   @@index([ownerId])
@@ -306,6 +307,24 @@ enum Priority {
   LOW
   MEDIUM
   HIGH
+}
+
+// ─── 17 CALENDAR (PRD §41, §86) ───────────────────────────────────────────────
+
+model CalendarEvent {
+  id          String   @id @default(uuid())
+  workspaceId String
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  title       String
+  description String?
+  startAt     DateTime
+  endAt       DateTime
+  allDay      Boolean  @default(false)
+  createdById String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([workspaceId, startAt])
 }
 
 // ─── 23 AUDIT ────────────────────────────────────────────────────────────────

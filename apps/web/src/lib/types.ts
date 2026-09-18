@@ -84,6 +84,31 @@ export interface AuditLogPage {
   nextCursor: string | null;
 }
 
+export type CalendarEntryKind = 'event' | 'meeting' | 'project_deadline' | 'task_deadline';
+
+export interface CalendarEntry {
+  kind: CalendarEntryKind;
+  id: string;
+  title: string;
+  description: string | null;
+  startAt: string;
+  endAt: string | null;
+  allDay: boolean;
+  status: string | null;
+  refId: string;
+}
+
+export interface CalendarReminder extends CalendarEntry {
+  dueInDays: number;
+}
+
+export const CALENDAR_KIND_LABEL: Record<CalendarEntryKind, string> = {
+  event: 'Event',
+  meeting: 'Meeting',
+  project_deadline: 'Deadline proyek',
+  task_deadline: 'Deadline tugas',
+};
+
 export type ApiError = SofoErrorBody;
 
 export interface AuthSession {
