@@ -1,0 +1,231 @@
+.meetings {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  padding: var(--sofo-sp-6);
+  gap: var(--sofo-sp-5);
+  overflow-y: auto;
+}
+
+.meetings__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sofo-sp-4);
+}
+
+.meetings__title {
+  font-size: var(--sofo-fs-2xl);
+  color: var(--sofo-text-100);
+}
+
+.meetings__subtitle {
+  font-size: var(--sofo-fs-sm);
+  color: var(--sofo-text-500);
+}
+
+.meetings__error {
+  color: var(--sofo-danger);
+  font-size: var(--sofo-fs-sm);
+}
+
+.meetings__empty {
+  color: var(--sofo-text-600);
+  font-size: var(--sofo-fs-sm);
+}
+
+.meetings__layout {
+  display: grid;
+  grid-template-columns: minmax(320px, 1fr) minmax(280px, 1fr);
+  gap: var(--sofo-sp-5);
+  align-items: start;
+}
+
+.meetings__list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sofo-sp-3);
+}
+
+.meetings__card {
+  background: var(--sofo-ink-900);
+  border: 1px solid var(--sofo-ink-800);
+  border-radius: var(--sofo-r-lg);
+  overflow: hidden;
+  transition: border-color var(--sofo-dur-fast) var(--sofo-ease);
+}
+
+.meetings__card--open,
+.meetings__card:hover {
+  border-color: var(--sofo-accent-700);
+}
+
+.meetings__card-main {
+  display: block;
+  width: 100%;
+  background: none;
+  border: none;
+  padding: var(--sofo-sp-4);
+  text-align: left;
+  cursor: pointer;
+  color: inherit;
+}
+
+.meetings__card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sofo-sp-3);
+}
+
+.meetings__card-title {
+  font-size: var(--sofo-fs-lg);
+  color: var(--sofo-text-100);
+}
+
+.meetings__badge {
+  font-size: var(--sofo-fs-xs);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  border-radius: var(--sofo-r-full);
+  padding: 2px var(--sofo-sp-2);
+  white-space: nowrap;
+}
+
+.meetings__badge--active {
+  color: var(--sofo-success);
+  background: rgb(52 211 153 / 0.12);
+}
+
+.meetings__badge--scheduled {
+  color: var(--sofo-info);
+  background: rgb(96 165 250 / 0.12);
+}
+
+.meetings__badge--ended {
+  color: var(--sofo-text-500);
+  background: var(--sofo-ink-800);
+}
+
+.meetings__when {
+  margin-top: var(--sofo-sp-1);
+  font-size: var(--sofo-fs-sm);
+  color: var(--sofo-text-300);
+}
+
+.meetings__desc {
+  margin-top: var(--sofo-sp-2);
+  font-size: var(--sofo-fs-sm);
+  color: var(--sofo-text-500);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.meetings__meta {
+  margin-top: var(--sofo-sp-2);
+  font-size: var(--sofo-fs-xs);
+  color: var(--sofo-text-600);
+}
+
+.meetings__card-actions {
+  display: flex;
+  gap: var(--sofo-sp-2);
+  padding: 0 var(--sofo-sp-4) var(--sofo-sp-4);
+  flex-wrap: wrap;
+}
+
+.meetings__notes {
+  background: var(--sofo-ink-950);
+  border: 1px solid var(--sofo-ink-800);
+  border-radius: var(--sofo-r-lg);
+  padding: var(--sofo-sp-5);
+  position: sticky;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sofo-sp-3);
+}
+
+.meetings__notes-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sofo-sp-3);
+}
+
+.meetings__notes-title {
+  font-size: var(--sofo-fs-lg);
+  color: var(--sofo-text-100);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.meetings__note-input {
+  width: 100%;
+  background: var(--sofo-ink-900);
+  border: 1px solid var(--sofo-ink-700);
+  border-radius: var(--sofo-r-md);
+  padding: var(--sofo-sp-3) var(--sofo-sp-4);
+  color: var(--sofo-text-100);
+  font-family: var(--sofo-font);
+  font-size: var(--sofo-fs-md);
+  resize: vertical;
+}
+
+.meetings__note-input:focus {
+  border-color: var(--sofo-accent-500);
+  outline: none;
+}
+
+.meetings__note-status {
+  font-size: var(--sofo-fs-xs);
+  color: var(--sofo-success);
+  min-height: 1em;
+}
+
+.meetings__notes-list {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sofo-sp-3);
+}
+
+.meetings__note {
+  display: flex;
+  gap: var(--sofo-sp-3);
+  align-items: flex-start;
+}
+
+.meetings__note-author {
+  font-size: var(--sofo-fs-xs);
+  font-weight: 700;
+  color: var(--sofo-text-300);
+}
+
+.meetings__note-content {
+  font-size: var(--sofo-fs-sm);
+  color: var(--sofo-text-100);
+  white-space: pre-wrap;
+}
+
+.meetings__form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sofo-sp-4);
+}
+
+@media (max-width: 900px) {
+  .meetings__layout {
+    grid-template-columns: 1fr;
+  }
+
+  .meetings__notes {
+    position: static;
+  }
+}

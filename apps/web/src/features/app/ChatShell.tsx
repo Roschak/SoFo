@@ -6,9 +6,11 @@ import { Field } from '../../components/ui/Field';
 import { Modal } from '../../components/ui/Modal';
 import { Avatar } from '../../components/ui/Avatar';
 import { ChannelView } from './ChannelView';
+import { MeetingsView } from './MeetingsView';
 import './ChatShell.css';
 
 type Dialog = 'none' | 'workspace' | 'channel';
+type View = 'chat' | 'meetings';
 
 export function ChatShell() {
   const { session, logout } = useAuth();
@@ -27,6 +29,7 @@ export function ChatShell() {
     createChannel,
   } = useWorkspace();
 
+  const [view, setView] = useState<View>('chat');
   const [dialog, setDialog] = useState<Dialog>('none');
   const [wsName, setWsName] = useState('');
   const [wsMode, setWsMode] = useState<'ENTERPRISE' | 'COMMUNITY'>('COMMUNITY');
@@ -120,9 +123,12 @@ export function ChatShell() {
                 <li key={channel.id}>
                   <button
                     className={`shell__item${
-                      channel.id === activeChannel?.id ? ' shell__item--active' : ''
+                      view === 'chat' && channel.id === activeChannel?.id ? ' shell__item--active' : ''
                     }`}
-                    onClick={() => setActiveChannel(channel)}
+                    onClick={() => {
+                      setActiveChannel(channel);
+                      setView('chat');
+                    }}
                   >
                     <span className="shell__hash">#</span>
                     {channel.name}
@@ -130,6 +136,25 @@ export function ChatShell() {
                 </li>
               ))}
               {channels.length === 0 ? <li className="shell__empty">Belum ada channel</li> : null}
+            </ul>
+          </div>
+        ) : null}
+
+        {activeWorkspace ? (
+          <div className="shell__section">
+            <div className="shell__section-head">
+              <span>Menu</span>
+            </div>
+            <ul className="shell__list">
+              <li>
+                <button
+                  className={`shell__item${view === 'meetings' ? ' shell__item--active' : ''}`}
+                  onClick={() => setView('meetings')}
+                >
+                  <span className="shell__hash">▦</span>
+                  Meetings
+                </button>
+              </li>
             </ul>
           </div>
         ) : null}
@@ -144,7 +169,9 @@ export function ChatShell() {
       </aside>
 
       <main className="shell__main">
-        {activeChannel && activeWorkspace ? (
+        {view === 'meetings' && activeWorkspace ? (
+          <MeetingsView key={activeWorkspace.id} />
+        ) : activeChannel && activeWorkspace ? (
           <ChannelView key={activeChannel.id} />
         ) : (
           <div className="shell__placeholder">

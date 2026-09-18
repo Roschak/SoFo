@@ -34,14 +34,38 @@ export interface Channel {
 
 export type Message = import('@sofo/shared').MessageRealtimeView;
 
+export interface MeetingParticipantView {
+  userId: string;
+  joinedAt: string;
+}
+
+export interface MeetingNoteView {
+  id: string;
+  authorId: string;
+  content: string;
+  createdAt?: string;
+}
+
 export interface Meeting {
   id: string;
+  workspaceId: string;
   title: string;
   description: string | null;
   status: 'SCHEDULED' | 'ACTIVE' | 'ENDED' | 'ARCHIVED';
   scheduledAt: string;
+  startedAt: string | null;
+  endedAt: string | null;
   hostId: string;
+  participants: MeetingParticipantView[];
+  notes: MeetingNoteView[];
 }
+
+export const MEETING_STATUS_LABEL: Record<Meeting['status'], string> = {
+  SCHEDULED: 'Terjadwal',
+  ACTIVE: 'Berlangsung',
+  ENDED: 'Selesai',
+  ARCHIVED: 'Arsip',
+};
 
 export type ApiError = SofoErrorBody;
 
