@@ -5,6 +5,57 @@
 
 ---
 
+## Sesi #2 — 2026-09-18 — RESUME: fix blocker `authorName` — SELESAI ✅
+
+### Yang sudah selesai
+- **Root cause sebenarnya ditemukan**: catatan Sesi #1c menduga generated client
+  usang; faktanya `prisma/schema.prisma` sendiri BELUM punya relasi `author User`
+  di model `Message`. Ditambahkan relasi + back-relation `messages Message[]` di
+  `User` + migration `20260918071233_add_message_author_relation` (FK cascade).
+- Prisma client regenerate → relasi `author` dikenali (grep 84 → 92).
+- Unit test mock `communication.service.spec.ts` ditambah `author.displayName`.
+- Hasil: semua endpoint message 201/200 dengan `authorName` terisi.
+
+### Hasil verifikasi
+- http-smoke **41/41**, realtime-smoke **15/15**, unit 37+8+7 = 52/52
+- lint 0, typecheck 0, build sukses
+- Commit: `d21cd60`
+
+### Keputusan / temuan teknis
+- Docker Desktop perlu dinyalakan manual dulu (daemon tidak auto-start);
+  lokasi exe: `%LOCALAPPDATA%\Programs\DockerDesktop\Docker Desktop.exe`.
+- File sampah `how --stat` di repo root TIDAK ikut di-commit (sisa typo shell);
+  boleh dihapus owner.
+
+### Sesi #2b — 2026-09-18 — Meetings + Live Notes UI — SELESAI ✅
+- Web: `MeetingContext` (state + lifecycle + join + notes polling 5s),
+  `MeetingsView` (list, jadwalkan, mulai/akhiri/arsip, ikut, live notes
+  autosave 1.2s debounce + merge polling), nav "Meetings" di sidebar shell.
+- `lib/meeting-view.ts` pure helpers (sort, mergeNotes, canWriteNotes,
+  roleCanManageMeetings) + 9 unit test; web total 16/16 pass.
+- Shape API diverifikasi live terhadap server :4001 (keys cocok dgn type UI).
+- catatan: polling dipakai utk notes karena realtime event meeting belum ada
+  di ADR-004 — ganti ke push saat notification/event bus (P1) dibuat.
+- Commit: `11218e2`
+
+### Sesi #2c — 2026-09-18 — Audit service + viewer (PRD §49) — SELESAI ✅
+- `AuditService.record()` tidak pernah melempar (audit gagal hanya dilogger,
+  business flow aman); query tenant-scoped + filter + cursor pagination (max 200).
+- Permission baru `audit.view` di shared matrix (OWNER/ADMIN/MANAGER) —
+  ⚠️ workspace yang dibuat SEBELUM perubahan ini masih pakai role seed lama
+  (tanpa audit.view); hanya berlaku untuk workspace baru / setelah reseed.
+- Entri auth (register/login) disimpan dengan `workspaceId: null` — global,
+  tidak tampil di audit per-workspace (keputusan desain, bukan bug).
+- Verifikasi: unit 42+8+16 = 66/66, http-smoke **48/48** (+7 audit acceptance),
+  realtime 15/15, lint/typecheck 0, build sukses.
+- Commit: (lihat git log sesi ini)
+
+### Yang BELUM selesai (lanjutkan di sini)
+- Lihat `docs/notes/03-BELUM-DIKERJAKAN.md` — P1 berikutnya: calendar,
+  attendance, approval, notification, global search, admin dashboard.
+
+---
+
 ## ⚠️ STOP DIMINTA OWNER — akhir Sesi #1c (2026-09-17)
 
 Status berhenti: perbaikan `authorName` pada message API BELUM lolos E2E.

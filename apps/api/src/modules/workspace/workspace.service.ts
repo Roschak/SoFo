@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../infrastructure/prisma/prisma.service';
 import { AuthorizationService } from '../authorization/authorization.service';
+import { AuditService } from '../audit/audit.service';
 import { conflict, forbidden, notFound } from '@sofo/shared';
 import { DEFAULT_ROLE_PERMISSIONS } from '@sofo/shared';
 
@@ -32,6 +33,7 @@ export class WorkspaceService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly authorizationService: AuthorizationService,
+    private readonly auditService: AuditService,
   ) {}
 
   async createWorkspace(ownerId: string, input: { name: string; mode: 'ENTERPRISE' | 'COMMUNITY'; description?: string }) {
@@ -66,6 +68,15 @@ export class WorkspaceService {
       });
 
       return created;
+    });
+
+    await this.auditService.record({
+      workspaceId: workspace.id,
+      actorId: ownerId,
+      action: 'workspace.create',
+      target: `workspace:${workspace.id}`,
+      result: 'SUCCESS',
+      metadata: { name: workspace.name, mode: workspace.mode },
     });
 
     return this.toView(workspace);
@@ -158,6 +169,14 @@ export class WorkspaceService {
     }
 
     await this.prisma.workspaceMember.update({ where: { id: memberId }, data: { roleId: role.id } });
+    await this.auditService.record({
+      workspaceId,
+      actorId,
+      action: 'member.role.set',
+      target: `member:${memberId}`,
+      result: 'SUCCESS',
+      metadata: { userId: member.userId, role: roleName },
+    });
     return { success: true };
   }
 
@@ -175,6 +194,14 @@ export class WorkspaceService {
     }
 
     await this.prisma.workspaceMember.delete({ where: { id: memberId } });
+    await this.auditService.record({
+      workspaceId,
+      actorId,
+      action: 'member.remove',
+      target: `member:${memberId}`,
+      result: 'SUCCESS',
+      metadata: { userId: member.userId },
+    });
     return { success: true };
   }
 

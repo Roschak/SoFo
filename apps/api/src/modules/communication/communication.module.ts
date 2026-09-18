@@ -3,9 +3,10 @@ import { CommunicationService } from './communication.service';
 import { CommunicationController } from './communication.controller';
 import { AuthorizationModule } from '../authorization/authorization.module';
 import { RealtimeModule } from '../realtime/realtime.module';
+import { AuditModule } from '../audit/audit.module';
 
 @Module({
-  imports: [AuthorizationModule, RealtimeModule],
+  imports: [AuthorizationModule, RealtimeModule, AuditModule],
   controllers: [CommunicationController],
   providers: [CommunicationService],
   exports: [CommunicationService],

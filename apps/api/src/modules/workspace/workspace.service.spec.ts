@@ -4,6 +4,7 @@ describe('WorkspaceService', () => {
   let service: WorkspaceService;
   let prisma: any;
   let authorizationService: { getMembership: jest.Mock; assertPermission: jest.Mock };
+  let auditService: { record: jest.Mock };
 
   beforeEach(() => {
     prisma = {
@@ -33,8 +34,9 @@ describe('WorkspaceService', () => {
     );
 
     authorizationService = { getMembership: jest.fn(), assertPermission: jest.fn() };
+    auditService = { record: jest.fn() };
 
-    service = new WorkspaceService(prisma as never, authorizationService as never);
+    service = new WorkspaceService(prisma as never, authorizationService as never, auditService as never);
   });
 
   describe('createWorkspace', () => {

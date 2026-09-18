@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../infrastructure/prisma/prisma.service';
 import { AuthorizationService } from '../authorization/authorization.service';
+import { AuditService } from '../audit/audit.service';
 import { forbidden, notFound } from '@sofo/shared';
 
 /**
@@ -12,6 +13,7 @@ export class ProjectService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly authorizationService: AuthorizationService,
+    private readonly auditService: AuditService,
   ) {}
 
   async createProject(
@@ -91,6 +93,13 @@ export class ProjectService {
       throw notFound('Project');
     }
     await this.prisma.project.delete({ where: { id: projectId } });
+    await this.auditService.record({
+      workspaceId,
+      actorId,
+      action: 'project.delete',
+      target: `project:${projectId}`,
+      result: 'SUCCESS',
+    });
     return { success: true };
   }
 

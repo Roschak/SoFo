@@ -27,7 +27,9 @@ describe('MeetingService', () => {
       meetingNote: { findFirst: jest.fn(), create: jest.fn(), update: jest.fn(), findMany: jest.fn().mockResolvedValue([]) },
     };
     authorizationService = { assertPermission: jest.fn() };
-    service = new MeetingService(prisma as never, authorizationService as never);
+    service = new MeetingService(prisma as never, authorizationService as never, {
+      record: jest.fn(),
+    } as never);
   });
 
   describe('lifecycle', () => {

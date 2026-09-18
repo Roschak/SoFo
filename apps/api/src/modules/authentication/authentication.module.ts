@@ -5,9 +5,10 @@ import { AuthenticationController } from './authentication.controller';
 import { SessionGuard, PermissionGuard } from './guards/session.guard';
 import { IdentityModule } from '../identity/identity.module';
 import { AuthorizationModule } from '../authorization/authorization.module';
+import { AuditModule } from '../audit/audit.module';
 
 @Module({
-  imports: [IdentityModule, AuthorizationModule],
+  imports: [IdentityModule, AuthorizationModule, AuditModule],
   controllers: [AuthenticationController],
   providers: [
     AuthenticationService,

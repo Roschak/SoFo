@@ -309,6 +309,63 @@ async function main() {
   });
   check('workspace tidak ada → 403 (bukan 404, anti probing)', notFoundWs.status === 403);
 
+  console.log('\n=== 6b. AUDIT — CRITICAL ACTION TRAIL (PRD §49) ===');
+  const auditOwner = await call('GET', `/workspaces/${workspaceId}/audit`, {
+    token: ownerToken,
+    workspaceId,
+  });
+  check(
+    'owner (audit.view) list audit 200 + ada entri',
+    auditOwner.status === 200 && auditOwner.data.items.length > 0,
+    JSON.stringify(auditOwner.data),
+  );
+
+  const auditActions = auditOwner.data.items.map((item) => item.action);
+  check(
+    'audit mencatat workspace.create + meeting.start (WHO/WHAT/TARGET/RESULT)',
+    auditActions.includes('workspace.create') &&
+      auditActions.includes('meeting.start') &&
+      auditOwner.data.items.every((item) => 'actorId' in item && 'target' in item && 'result' in item),
+  );
+
+  const wsCreateEntry = auditOwner.data.items.find((item) => item.action === 'workspace.create');
+  check(
+    'entri audit lengkap: actorName ter-resolve + metadata tersimpan',
+    Boolean(wsCreateEntry) &&
+      wsCreateEntry.actorName !== null &&
+      wsCreateEntry.metadata !== null &&
+      typeof wsCreateEntry.metadata.name === 'string',
+  );
+
+  const auditFiltered = await call('GET', `/workspaces/${workspaceId}/audit?action=meeting.start`, {
+    token: ownerToken,
+    workspaceId,
+  });
+  check(
+    'filter action=meeting.start hanya mengembalikan aksi itu',
+    auditFiltered.status === 200 &&
+      auditFiltered.data.items.length > 0 &&
+      auditFiltered.data.items.every((item) => item.action === 'meeting.start'),
+  );
+
+  const auditBadFilter = await call('GET', `/workspaces/${workspaceId}/audit?result=WEIRD`, {
+    token: ownerToken,
+    workspaceId,
+  });
+  check('filter invalid 400 VALIDATION_ERROR', auditBadFilter.status === 400);
+
+  const auditStaff = await call('GET', `/workspaces/${workspaceId}/audit`, {
+    token: staffToken,
+    workspaceId,
+  });
+  check('staff list audit 403 (tanpa audit.view)', auditStaff.status === 403);
+
+  const auditOutsider = await call('GET', `/workspaces/${workspaceId}/audit`, {
+    token: outsiderToken,
+    workspaceId,
+  });
+  check('outsider list audit 403', auditOutsider.status === 403);
+
   console.log('\n=== 7. LOGOUT ===');
   const logout = await call('DELETE', '/auth/session', { token: staffToken });
   check('logout 200/201', logout.status === 200 || logout.status === 201);

@@ -4,6 +4,7 @@ describe('AuthenticationService', () => {
   let service: AuthenticationService;
   let prisma: any;
   let identityService: { createIdentity: jest.Mock };
+  let auditService: { record: jest.Mock };
 
   beforeEach(() => {
     prisma = {
@@ -11,7 +12,8 @@ describe('AuthenticationService', () => {
       session: { create: jest.fn(), updateMany: jest.fn(), findUnique: jest.fn() },
     };
     identityService = { createIdentity: jest.fn() };
-    service = new AuthenticationService(prisma as never, identityService as never);
+    auditService = { record: jest.fn() };
+    service = new AuthenticationService(prisma as never, identityService as never, auditService as never);
   });
 
   describe('register', () => {

@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../infrastructure/prisma/prisma.service';
 import { AuthorizationService } from '../authorization/authorization.service';
+import { AuditService } from '../audit/audit.service';
 import { conflict, notFound } from '@sofo/shared';
 
 /**
@@ -12,6 +13,7 @@ export class MeetingService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly authorizationService: AuthorizationService,
+    private readonly auditService: AuditService,
   ) {}
 
   async createMeeting(
@@ -54,6 +56,13 @@ export class MeetingService {
       data: { status: 'ACTIVE', startedAt: new Date() },
       include: MEETING_INCLUDE,
     });
+    await this.auditService.record({
+      workspaceId,
+      actorId,
+      action: 'meeting.start',
+      target: `meeting:${meetingId}`,
+      result: 'SUCCESS',
+    });
     return this.toView(updated);
   }
 
@@ -68,6 +77,13 @@ export class MeetingService {
       data: { status: 'ENDED', endedAt: new Date() },
       include: MEETING_INCLUDE,
     });
+    await this.auditService.record({
+      workspaceId,
+      actorId,
+      action: 'meeting.end',
+      target: `meeting:${meetingId}`,
+      result: 'SUCCESS',
+    });
     return this.toView(updated);
   }
 
@@ -81,6 +97,13 @@ export class MeetingService {
       where: { id: meetingId },
       data: { status: 'ARCHIVED' },
       include: MEETING_INCLUDE,
+    });
+    await this.auditService.record({
+      workspaceId,
+      actorId,
+      action: 'meeting.archive',
+      target: `meeting:${meetingId}`,
+      result: 'SUCCESS',
     });
     return this.toView(updated);
   }

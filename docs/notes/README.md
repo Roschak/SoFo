@@ -33,5 +33,5 @@
 - Jangan pernah menyatakan "selesai" jika test/build belum lulus (PRD §104).
 - Jangan menebak; kalau ragu, catat sebagai "perlu keputusan owner" (PRD §102).
 
-Terakhir diperbarui: 2026-09-17, akhir Sesi #1 (stop diminta owner saat
-perbaikan `authorName` belum selesai — lihat `02-SEDANG-DIKERJAKAN.md`).
+Terakhir diperbarui: 2026-09-18, Sesi #2c — Audit service + viewer (PRD §49)
+selesai. Lanjut ke P1 berikutnya di `03-BELUM-DIKERJAKAN.md`.

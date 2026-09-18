@@ -1,11 +1,16 @@
 # BELUM DIKERJAKAN (urut prioritas PRD)
 
-## 0. Sisa bug aktif (blocker satu-satunya)
-- [ ] Prisma client regenerate → lihat `02-SEDANG-DIKERJAKAN.md`
-- [ ] Regression penuh setelah fix: http-smoke 41/41 + realtime-smoke 15/15
+## 0. Sisa bug aktif — TIDAK ADA (Sesi #2, 2026-09-18)
+- [x] Relasi `author` + migration + regenerate client → SELESAI, commit `d21cd60`
+- [x] Regression penuh: http-smoke 41/41 + realtime-smoke 15/15 → SELESAI
 
 ## P1 — setelah P0 stabil (PRD §142)
-- [ ] Audit service + viewer endpoints (PRD §49) — model `AuditLog` sudah ada
+- [x] Audit service + viewer endpoints (PRD §49) → SELESAI Sesi #2c: AuditService
+      (record tenant-scoped + list dengan filter action/actor/result/from/to + cursor),
+      GET /workspaces/:id/audit gated `audit.view` (OWNER/ADMIN/MANAGER), wiring ke
+      critical actions: workspace.create, member.role.set, member.remove, user.register,
+      auth.login (SUCCESS/FAILURE), message.delete, meeting.start/end/archive,
+      project.delete. http-smoke naik 41→48/48.
 - [ ] Calendar: events, meeting/deadline view, reminders (PRD §86)
 - [ ] Attendance: clock in/out, history, late status (PRD §87) — enterprise only
 - [ ] Request & Approval workflow (PRD §88)
@@ -32,7 +37,9 @@
 - [ ] Feature flags (PRD §136)
 
 ## Frontend — lanjutan setelah chat stabil
-- [ ] Halaman Meetings + Live Notes UI (API sudah siap)
+- [x] Halaman Meetings + Live Notes UI (API sudah siap) → SELESAI Sesi #2
+      (commit `11218e2`: MeetingContext + MeetingsView, notes autosave + polling,
+      9 unit test baru)
 - [ ] Halaman Projects & Tasks (kanban) (API sudah siap)
 - [ ] File upload UI + preview (API sudah siap)
 - [ ] Members management UI (invite, change role) (API sudah siap)

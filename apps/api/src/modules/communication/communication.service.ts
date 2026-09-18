@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../infrastructure/prisma/prisma.service';
 import { AuthorizationService } from '../authorization/authorization.service';
+import { AuditService } from '../audit/audit.service';
 import { RealtimeBroadcaster } from '../realtime/realtime.broadcaster';
 import { conflict, forbidden, notFound } from '@sofo/shared';
 
@@ -14,6 +15,7 @@ export class CommunicationService {
     private readonly prisma: PrismaService,
     private readonly authorizationService: AuthorizationService,
     private readonly realtimeBroadcaster: RealtimeBroadcaster,
+    private readonly auditService: AuditService,
   ) {}
 
   async createChannel(
@@ -165,6 +167,14 @@ export class CommunicationService {
     await this.prisma.message.update({
       where: { id: messageId },
       data: { deletedAt: new Date() },
+    });
+    await this.auditService.record({
+      workspaceId,
+      actorId,
+      action: 'message.delete',
+      target: `message:${messageId}`,
+      result: 'SUCCESS',
+      metadata: { channelId: message.channelId },
     });
     this.realtimeBroadcaster.broadcastMessageDeleted(workspaceId, {
       messageId,

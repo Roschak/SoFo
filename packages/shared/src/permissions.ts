@@ -48,6 +48,8 @@ export const SOFO_PERMISSIONS = [
   // request & approval
   'request.create',
   'request.approve',
+  // audit (PRD §49)
+  'audit.view',
 ] as const;
 
 export type SofoPermission = (typeof SOFO_PERMISSIONS)[number];
@@ -103,6 +105,7 @@ export const DEFAULT_ROLE_PERMISSIONS: Readonly<Record<SofoRole, readonly SofoPe
     'task.assign',
     'task.delete',
     'request.approve',
+    'audit.view',
   ],
   STAFF: [
     'workspace.view',
@@ -149,7 +152,6 @@ export const DEFAULT_ROLE_PERMISSIONS: Readonly<Record<SofoRole, readonly SofoPe
   CLIENT: CLIENT_PERMISSIONS,
   GUEST: ['workspace.view'],
 };
-
 export const roleHasPermission = (
   role: SofoRole,
   permission: SofoPermission,

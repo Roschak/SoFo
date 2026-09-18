@@ -40,6 +40,7 @@ describe('CommunicationService', () => {
       prisma as never,
       authorizationService as never,
       { broadcastMessageCreated: jest.fn(), broadcastMessageUpdated: jest.fn(), broadcastMessageDeleted: jest.fn() } as never,
+      { record: jest.fn() } as never,
     );
   });
 
