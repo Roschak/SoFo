@@ -7,10 +7,12 @@ import { Modal } from '../../components/ui/Modal';
 import { Avatar } from '../../components/ui/Avatar';
 import { ChannelView } from './ChannelView';
 import { MeetingsView } from './MeetingsView';
+import { AuditView } from './AuditView';
+import { canViewAudit } from '../../lib/audit-view';
 import './ChatShell.css';
 
 type Dialog = 'none' | 'workspace' | 'channel';
-type View = 'chat' | 'meetings';
+type View = 'chat' | 'meetings' | 'audit';
 
 export function ChatShell() {
   const { session, logout } = useAuth();
@@ -38,6 +40,8 @@ export function ChatShell() {
   const [dialogError, setDialogError] = useState<string | null>(null);
 
   const isOnline = (userId: string) => onlineUserIds.includes(userId);
+  const myRole = members.find((member) => member.user.id === session?.user.id)?.role;
+  const auditVisible = canViewAudit(myRole);
 
   async function handleCreateWorkspace() {
     setBusy(true);
@@ -155,6 +159,17 @@ export function ChatShell() {
                   Meetings
                 </button>
               </li>
+              {auditVisible ? (
+                <li>
+                  <button
+                    className={`shell__item${view === 'audit' ? ' shell__item--active' : ''}`}
+                    onClick={() => setView('audit')}
+                  >
+                    <span className="shell__hash">☰</span>
+                    Audit log
+                  </button>
+                </li>
+              ) : null}
             </ul>
           </div>
         ) : null}
@@ -171,6 +186,8 @@ export function ChatShell() {
       <main className="shell__main">
         {view === 'meetings' && activeWorkspace ? (
           <MeetingsView key={activeWorkspace.id} />
+        ) : view === 'audit' && activeWorkspace && auditVisible ? (
+          <AuditView key={activeWorkspace.id} />
         ) : activeChannel && activeWorkspace ? (
           <ChannelView key={activeChannel.id} />
         ) : (

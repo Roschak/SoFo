@@ -1,3 +1,4 @@
+import { Type } from 'class-transformer';
 import { IsDateString, IsIn, IsInt, IsOptional, IsString, IsUUID, Max, MaxLength, Min, MinLength } from 'class-validator';
 
 /**
@@ -32,6 +33,7 @@ export class ListAuditQueryDto {
   cursor?: string;
 
   @IsOptional()
+  @Type(() => Number) // query params arrive as strings — coerce before IsInt
   @IsInt()
   @Min(1)
   @Max(200)

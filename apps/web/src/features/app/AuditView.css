@@ -1,0 +1,202 @@
+.audit {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  padding: var(--sofo-sp-6);
+  gap: var(--sofo-sp-5);
+  overflow-y: auto;
+}
+
+.audit__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sofo-sp-4);
+  flex-wrap: wrap;
+}
+
+.audit__title {
+  font-size: var(--sofo-fs-2xl);
+  color: var(--sofo-text-100);
+}
+
+.audit__subtitle {
+  font-size: var(--sofo-fs-sm);
+  color: var(--sofo-text-500);
+}
+
+.audit__filters {
+  display: flex;
+  gap: var(--sofo-sp-2);
+  align-items: center;
+}
+
+.audit__select {
+  background: var(--sofo-ink-900);
+  border: 1px solid var(--sofo-ink-700);
+  border-radius: var(--sofo-r-md);
+  color: var(--sofo-text-100);
+  padding: var(--sofo-sp-2) var(--sofo-sp-3);
+  font-family: var(--sofo-font);
+  font-size: var(--sofo-fs-sm);
+  cursor: pointer;
+}
+
+.audit__select:focus {
+  border-color: var(--sofo-accent-500);
+  outline: none;
+}
+
+.audit__error {
+  color: var(--sofo-danger);
+  font-size: var(--sofo-fs-sm);
+}
+
+.audit__empty {
+  color: var(--sofo-text-600);
+  font-size: var(--sofo-fs-sm);
+  padding: var(--sofo-sp-4);
+}
+
+.audit__table {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--sofo-ink-800);
+  border-radius: var(--sofo-r-lg);
+  background: var(--sofo-ink-950);
+  overflow: hidden;
+}
+
+.audit__row {
+  display: grid;
+  grid-template-columns: 140px 140px minmax(160px, 1.2fr) minmax(180px, 1fr) 90px;
+  gap: var(--sofo-sp-3);
+  align-items: center;
+  width: 100%;
+  padding: var(--sofo-sp-3) var(--sofo-sp-4);
+  background: none;
+  border: none;
+  border-bottom: 1px solid var(--sofo-ink-800);
+  color: var(--sofo-text-300);
+  font-size: var(--sofo-fs-sm);
+  text-align: left;
+  cursor: pointer;
+  transition: background var(--sofo-dur-fast) var(--sofo-ease);
+}
+
+.audit__row:hover {
+  background: var(--sofo-ink-900);
+}
+
+.audit__row--head {
+  cursor: default;
+  font-size: var(--sofo-fs-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--sofo-text-500);
+  background: var(--sofo-ink-900);
+}
+
+.audit__row--head:hover {
+  background: var(--sofo-ink-900);
+}
+
+.audit__row--failure {
+  background: rgb(248 113 113 / 0.06);
+}
+
+.audit__row--failure:hover {
+  background: rgb(248 113 113 / 0.1);
+}
+
+.audit__row-wrap:last-child .audit__row {
+  border-bottom: none;
+}
+
+.audit__time {
+  color: var(--sofo-text-500);
+  font-variant-numeric: tabular-nums;
+}
+
+.audit__actor {
+  font-weight: 600;
+  color: var(--sofo-text-100);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.audit__action {
+  font-family: ui-monospace, 'Cascadia Code', 'Source Code Pro', monospace;
+  color: var(--sofo-accent-200);
+}
+
+.audit__target {
+  font-family: ui-monospace, 'Cascadia Code', 'Source Code Pro', monospace;
+  font-size: var(--sofo-fs-xs);
+  color: var(--sofo-text-500);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.audit__badge {
+  font-size: var(--sofo-fs-xs);
+  font-weight: 700;
+  border-radius: var(--sofo-r-full);
+  padding: 2px var(--sofo-sp-2);
+  display: inline-block;
+}
+
+.audit__badge--success {
+  color: var(--sofo-success);
+  background: rgb(52 211 153 / 0.12);
+}
+
+.audit__badge--failure {
+  color: var(--sofo-danger);
+  background: rgb(248 113 113 / 0.12);
+}
+
+.audit__detail {
+  padding: var(--sofo-sp-3) var(--sofo-sp-5) var(--sofo-sp-4);
+  background: var(--sofo-ink-900);
+  border-bottom: 1px solid var(--sofo-ink-800);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sofo-sp-2);
+  font-size: var(--sofo-fs-sm);
+  color: var(--sofo-text-300);
+}
+
+.audit__metadata {
+  background: var(--sofo-ink-1000);
+  border: 1px solid var(--sofo-ink-700);
+  border-radius: var(--sofo-r-md);
+  padding: var(--sofo-sp-3);
+  font-size: var(--sofo-fs-xs);
+  color: var(--sofo-text-300);
+  overflow-x: auto;
+  margin: 0;
+}
+
+.audit__more {
+  display: flex;
+  justify-content: center;
+}
+
+@media (max-width: 900px) {
+  .audit__row {
+    grid-template-columns: 110px 110px 1fr 90px;
+  }
+
+  .audit__target {
+    display: none;
+  }
+
+  .audit__row--head span:nth-child(4) {
+    display: none;
+  }
+}

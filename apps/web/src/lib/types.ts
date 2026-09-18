@@ -67,6 +67,23 @@ export const MEETING_STATUS_LABEL: Record<Meeting['status'], string> = {
   ARCHIVED: 'Arsip',
 };
 
+export interface AuditLogView {
+  id: string;
+  workspaceId: string | null;
+  actorId: string | null;
+  actorName: string | null;
+  action: string;
+  target: string;
+  result: string;
+  metadata: unknown;
+  createdAt: string;
+}
+
+export interface AuditLogPage {
+  items: AuditLogView[];
+  nextCursor: string | null;
+}
+
 export type ApiError = SofoErrorBody;
 
 export interface AuthSession {
