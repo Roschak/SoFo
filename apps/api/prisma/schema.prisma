@@ -24,6 +24,7 @@ model User {
 
   sessions         Session[]
   workspaceMembers WorkspaceMember[]
+  messages         Message[]
   auditLogs        AuditLog[]
 
   @@index([email])
@@ -166,6 +167,7 @@ model Message {
   channelId   String
   channel     Channel   @relation(fields: [channelId], references: [id], onDelete: Cascade)
   authorId    String
+  author      User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
   content     String
   replyToId   String?
   replyTo     Message?  @relation("MessageThread", fields: [replyToId], references: [id], onDelete: SetNull)

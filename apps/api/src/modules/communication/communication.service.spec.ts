@@ -9,6 +9,7 @@ describe('CommunicationService', () => {
     id: 'm-1',
     channelId: 'c-1',
     authorId: 'author-1',
+    author: { displayName: 'Author One' },
     content: 'hello',
     replyToId: null,
     editedAt: null,
