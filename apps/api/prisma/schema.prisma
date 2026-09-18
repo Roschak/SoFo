@@ -25,6 +25,8 @@ model User {
   sessions         Session[]
   workspaceMembers WorkspaceMember[]
   messages         Message[]
+  requestsMade     Request[] @relation("RequestsMade")
+  requestsDecided  Request[] @relation("RequestsDecided")
   auditLogs        AuditLog[]
 
   @@index([email])
@@ -71,6 +73,7 @@ model Workspace {
   projects    Project[]
   meetings    Meeting[]
   calendarEvents CalendarEvent[]
+  requests    Request[]
   auditLogs   AuditLog[]
 
   @@index([ownerId])
@@ -325,6 +328,44 @@ model CalendarEvent {
   updatedAt   DateTime @updatedAt
 
   @@index([workspaceId, startAt])
+}
+
+// ─── 19 REQUEST & APPROVAL (PRD §44, §45, §88) ─────────────────────────────
+
+enum RequestType {
+  LEAVE
+  REIMBURSEMENT
+  OPERATIONAL
+  DOCUMENT
+  PERMISSION
+}
+
+enum RequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
+model Request {
+  id          String        @id @default(uuid())
+  workspaceId String
+  workspace   Workspace     @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  requesterId String
+  requester   User          @relation("RequestsMade", fields: [requesterId], references: [id], onDelete: Cascade)
+  type        RequestType
+  title       String
+  payload     Json?
+  status      RequestStatus @default(PENDING)
+  approverId  String?
+  approver    User?         @relation("RequestsDecided", fields: [approverId], references: [id], onDelete: SetNull)
+  decisionNote String?
+  decidedAt   DateTime?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@index([workspaceId, status])
+  @@index([requesterId])
 }
 
 // ─── 23 AUDIT ────────────────────────────────────────────────────────────────

@@ -43,4 +43,16 @@ export class AuthorizationService {
       throw forbidden(`Missing required permission: ${permission}`);
     }
   }
+
+  /** Non-throwing check used for domain rules (e.g. self-approval ban). */
+  async hasPermission(userId: string, workspaceId: string, permission: string): Promise<boolean> {
+    const member = await this.prisma.workspaceMember.findUnique({
+      where: { workspaceId_userId: { workspaceId, userId } },
+      include: { role: true },
+    });
+    if (!member) {
+      return false;
+    }
+    return (member.role.permissions as readonly string[]).includes(permission);
+  }
 }

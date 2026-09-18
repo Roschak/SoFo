@@ -439,6 +439,139 @@ async function main() {
   });
   check('outsider GET calendar 403', calOutsider.status === 403);
 
+  console.log('\n=== 6d. REQUEST & APPROVAL (PRD §44, §45, §88) ===');
+  const reqCreate = await call('POST', `/workspaces/${workspaceId}/requests`, {
+    token: staffToken,
+    workspaceId,
+    body: { type: 'LEAVE', title: 'Cuti 2 hari', payload: { days: 2 } },
+  });
+  check('staff create request 201', reqCreate.status === 201, JSON.stringify(reqCreate.data));
+  const requestId = reqCreate.data.id;
+
+  const reqInvalidType = await call('POST', `/workspaces/${workspaceId}/requests`, {
+    token: staffToken,
+    workspaceId,
+    body: { type: 'VACATION', title: 'Tipe ngawur' },
+  });
+  check('tipe request invalid 400 VALIDATION_ERROR', reqInvalidType.status === 400);
+
+  const staffApprove = await call('POST', `/workspaces/${workspaceId}/requests/${requestId}/approve`, {
+    token: staffToken,
+    workspaceId,
+    body: {},
+  });
+  check('staff approve 403 (tanpa request.approve)', staffApprove.status === 403);
+
+  const ownerApprove = await call('POST', `/workspaces/${workspaceId}/requests/${requestId}/approve`, {
+    token: ownerToken,
+    workspaceId,
+    body: { note: 'Disetujui, jangan bentrok sprint review' },
+  });
+  check(
+    'owner approve 201 + status APPROVED + dicatat approver',
+    ownerApprove.status === 201 &&
+      ownerApprove.data.status === 'APPROVED' &&
+      ownerApprove.data.approverName !== null &&
+      ownerApprove.data.decidedAt !== null,
+    JSON.stringify(ownerApprove.data),
+  );
+
+  const doubleDecide = await call('POST', `/workspaces/${workspaceId}/requests/${requestId}/reject`, {
+    token: ownerToken,
+    workspaceId,
+    body: {},
+  });
+  check('decide ulang 409 CONFLICT', doubleDecide.status === 409);
+
+  // alur kedua: self-approval ban — approver tidak boleh memutus request sendiri.
+  // Owner membuat request miliknya sendiri sebagai target test.
+  const reqSelf = await call('POST', `/workspaces/${workspaceId}/requests`, {
+    token: ownerToken,
+    workspaceId,
+    body: { type: 'PERMISSION', title: 'Minta akses admin DB' },
+  });
+  check('owner create request miliknya 201', reqSelf.status === 201);
+  const ownPending = reqSelf.data;
+  check('setup: owner punya request PENDING miliknya', Boolean(ownPending), JSON.stringify(reqSelf.data));
+
+  const selfApprove = await call('POST', `/workspaces/${workspaceId}/requests/${ownPending.id}/approve`, {
+    token: ownerToken,
+    workspaceId,
+    body: {},
+  });
+  check(
+    'owner approve request milik sendiri ditolak 403 (self-approval ban)',
+    selfApprove.status === 403,
+  );
+
+  const reqTwo = await call('POST', `/workspaces/${workspaceId}/requests`, {
+    token: staffToken,
+    workspaceId,
+    body: { type: 'REIMBURSEMENT', title: 'Reimburse transport' },
+  });
+
+  const reqThree = await call('POST', `/workspaces/${workspaceId}/requests`, {
+    token: staffToken,
+    workspaceId,
+    body: { type: 'OPERATIONAL', title: 'Minta akses server' },
+  });
+  const rejectRes = await call('POST', `/workspaces/${workspaceId}/requests/${reqThree.data.id}/reject`, {
+    token: ownerToken,
+    workspaceId,
+    body: { note: 'Belum ada budget akses' },
+  });
+  check(
+    'reject request + REJECTED + note + approver tercatat',
+    (rejectRes.status === 201 || rejectRes.status === 200) &&
+      rejectRes.data.status === 'REJECTED' &&
+      rejectRes.data.decisionNote === 'Belum ada budget akses' &&
+      rejectRes.data.approverName !== null,
+  );
+
+  const reqFour = await call('POST', `/workspaces/${workspaceId}/requests`, {
+    token: staffToken,
+    workspaceId,
+    body: { type: 'DOCUMENT', title: 'Minta dokumen kontrak' },
+  });
+  const cancelRes = await call('DELETE', `/workspaces/${workspaceId}/requests/${reqFour.data.id}`, {
+    token: staffToken,
+    workspaceId,
+  });
+  check(
+    'requester cancel request + CANCELLED',
+    (cancelRes.status === 200 || cancelRes.status === 201) && cancelRes.data.status === 'CANCELLED',
+  );
+
+  const listAll = await call('GET', `/workspaces/${workspaceId}/requests`, { token: ownerToken, workspaceId });
+  check(
+    'approver melihat semua request — 4 status workflow terwakili',
+    listAll.status === 200 &&
+      ['APPROVED', 'REJECTED', 'CANCELLED', 'PENDING'].every((status) =>
+        listAll.data.items.some((item) => item.status === status),
+      ),
+    JSON.stringify(listAll.data),
+  );
+
+  const listMine = await call('GET', `/workspaces/${workspaceId}/requests?mine=1`, {
+    token: staffToken,
+    workspaceId,
+  });
+  check(
+    'staff hanya melihat request miliknya',
+    listMine.status === 200 &&
+      listMine.data.items.length > 0 &&
+      listMine.data.items.every((item) => item.requesterName === 'Staff'),
+  );
+
+  const auditTrail = await call('GET', `/workspaces/${workspaceId}/audit?action=request.approve`, {
+    token: ownerToken,
+    workspaceId,
+  });
+  check(
+    'audit mencatat request.approve (PRD §45 tahap audit)',
+    auditTrail.status === 200 && auditTrail.data.items.length > 0,
+  );
+
   console.log('\n=== 7. LOGOUT ===');
   const logout = await call('DELETE', '/auth/session', { token: staffToken });
   check('logout 200/201', logout.status === 200 || logout.status === 201);
