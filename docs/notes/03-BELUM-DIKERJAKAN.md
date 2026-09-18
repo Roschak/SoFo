@@ -9,8 +9,11 @@
       (record tenant-scoped + list dengan filter action/actor/result/from/to + cursor),
       GET /workspaces/:id/audit gated `audit.view` (OWNER/ADMIN/MANAGER), wiring ke
       critical actions: workspace.create, member.role.set, member.remove, user.register,
-      auth.login (SUCCESS/FAILURE), message.delete, meeting.start/end/archive,
+      auth.login (SUCCESS/FAILURE), message.delete,      meeting.start/end/archive,
       project.delete. http-smoke naik 41→48/48.
+- [x] UI audit viewer web → SELESAI Sesi #2e (commit `bf14e07`): halaman Audit
+      dgn filter, expand metadata, load-more; nav hanya utk OWNER/ADMIN/MANAGER;
+      sekalian fix bug DTO `limit` (string → @Type coerce).
 - [ ] Calendar: events, meeting/deadline view, reminders (PRD §86)
 - [ ] Attendance: clock in/out, history, late status (PRD §87) — enterprise only
 - [ ] Request & Approval workflow (PRD §88)

@@ -58,6 +58,19 @@
 - File sampah `how --stat` di repo root dihapus (untracked, sisa typo shell;
   tidak ada perubahan git).
 
+### Sesi #2e — 2026-09-18 — UI Audit log viewer — SELESAI ✅
+- Web: `AuditView` (filter aksi/hasil, tabel newest-first, baris FAILURE
+  disorot, expand metadata JSON, load-more cursor), nav "Audit log" hanya
+  tampil untuk OWNER/ADMIN/MANAGER (canViewAudit). Helpers `audit-view.ts`
+  + 5 unit test (web 21/21).
+- **Bug API ditemukan & diperbaiki**: `limit` query param ditolak `@IsInt`
+  karena datang sebagai string → VALIDATION_ERROR 400. Fix: `@Type(() => Number)`
+  di `audit.dto.ts`. Terungkap saat verifikasi live UI (smoke lama tidak
+  memakai limit — pelajaran: smoke perlu varian dengan limit).
+- Verifikasi: web 21/21 + typecheck/lint/build hijau; http-smoke 48/48;
+  API unit 42/42; live check `limit=10` + filter 200 OK.
+- Commit: `bf14e07`
+
 ---
 
 ## ⚠️ STOP DIMINTA OWNER — akhir Sesi #1c (2026-09-17)
