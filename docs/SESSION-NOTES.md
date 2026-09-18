@@ -71,6 +71,24 @@
   API unit 42/42; live check `limit=10` + filter 200 OK.
 - Commit: `bf14e07`
 
+### Sesi #2f — 2026-09-18 — Calendar (PRD §41, §86) — SELESAI ✅
+- API: model `CalendarEvent` + migration; `CalendarService` agregasi 4 sumber
+  (event manual, meeting.scheduledAt, project.deadline, task.deadline) semua
+  tenant-scoped & sorted; `GET .../calendar/reminders?horizonDays=` dengan
+  `dueInDays` (window anchor = start of today supaya agenda hari ini ikut);
+  `POST/DELETE .../calendar/events` gated `calendar.event.create` baru
+  (OWNER/ADMIN/MANAGER) + audit `calendar.event.create/delete`.
+- Web: `CalendarView` grid 6 minggu Monday-first (warna per kind: event ungu,
+  meeting biru, deadline kuning; highlight hari ini), panel Pengingat 7 hari
+  ("Hari ini/Besok/n hari lagi"), agenda bulan, dialog buat event; nav "Kalender".
+- Gotcha Windows: `prisma generate` gagal EPERM kalau API server masih jalan
+  (query engine DLL ter-lock) — matikan dulu server, lalu generate ulang.
+- Verifikasi: http-smoke **56/56** (+8 calendar), API unit **49/49** (+7),
+  web unit **28/28** (+7), lint/typecheck/build hijau, live check agregasi
+  3 kind + reminders `event:0d`.
+- Belum: push-notif reminder (§89), recurrence/event berulang.
+- Commit: `411307f`
+
 ---
 
 ## ⚠️ STOP DIMINTA OWNER — akhir Sesi #1c (2026-09-17)

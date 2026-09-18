@@ -14,7 +14,13 @@
 - [x] UI audit viewer web → SELESAI Sesi #2e (commit `bf14e07`): halaman Audit
       dgn filter, expand metadata, load-more; nav hanya utk OWNER/ADMIN/MANAGER;
       sekalian fix bug DTO `limit` (string → @Type coerce).
-- [ ] Calendar: events, meeting/deadline view, reminders (PRD §86)
+- [x] Calendar: events, meeting/deadline view, reminders (PRD §86) → SELESAI
+      Sesi #2f (commit `411307f`): model CalendarEvent + endpoint agregasi 4 sumber
+      (event, meeting, project/task deadline), reminders by horizon (default 7 hari,
+      termasuk hari ini), permission `calendar.event.create`, audit wiring, UI grid
+      bulanan + reminders di web. Catatan: push-notif reminder belum ada (butuh
+      notification system §89); "company event" dari PRD §41 dipetakan ke manual
+      event biasa.
 - [ ] Attendance: clock in/out, history, late status (PRD §87) — enterprise only
 - [ ] Request & Approval workflow (PRD §88)
 - [ ] Notification system terpusat dari event (PRD §89) — butuh ADR event bus;
