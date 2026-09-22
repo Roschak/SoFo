@@ -1,0 +1,89 @@
+/*
+ * Scroll-reveal animation styles — used by landing page and app views.
+ * Elements start hidden + offset, then transition to natural position when
+ * [data-reveal-visible] lands (set by lib/scroll-reveal.ts via IntersectionObserver).
+ */
+
+[data-reveal] {
+  opacity: 0;
+  transition:
+    opacity 0.6s var(--sofo-ease),
+    transform 0.6s var(--sofo-ease);
+  will-change: opacity, transform;
+}
+
+[data-reveal][data-reveal-direction='up'] {
+  transform: translateY(32px);
+}
+
+[data-reveal][data-reveal-direction='down'] {
+  transform: translateY(-32px);
+}
+
+[data-reveal][data-reveal-direction='left'] {
+  transform: translateX(-40px);
+}
+
+[data-reveal][data-reveal-direction='right'] {
+  transform: translateX(40px);
+}
+
+[data-reveal][data-reveal-direction='scale'] {
+  transform: scale(0.92);
+}
+
+[data-reveal][data-reveal-direction='tilt-left'] {
+  transform: perspective(1000px) rotateY(-8deg) translateY(24px);
+}
+
+[data-reveal][data-reveal-direction='tilt-right'] {
+  transform: perspective(1000px) rotateY(8deg) translateY(24px);
+}
+
+[data-reveal][data-reveal-visible='true'] {
+  opacity: 1;
+  transform: none;
+}
+
+
+/* Landing hero entrance (plays on load, not on scroll). */
+@keyframes landing-rise {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes landing-glow {
+  0%,
+  100% {
+    opacity: 0.55;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.85;
+    transform: scale(1.08);
+  }
+}
+
+@keyframes landing-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-reveal] {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+}

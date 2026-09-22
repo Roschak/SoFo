@@ -46,6 +46,17 @@ export class IdentityService {
     return user;
   }
 
+  async lookupByEmail(email: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { email: email.toLowerCase() },
+      select: IDENTITY_SELECT,
+    });
+    if (!user) {
+      throw notFound('User');
+    }
+    return user;
+  }
+
   async updateProfile(userId: string, input: UpdateProfileInput) {
     await this.getProfile(userId);
     return this.prisma.user.update({

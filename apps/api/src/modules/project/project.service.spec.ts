@@ -38,7 +38,7 @@ describe('ProjectService', () => {
     authorizationService = { assertPermission: jest.fn(), getMembership: jest.fn() };
     service = new ProjectService(prisma as never, authorizationService as never, {
       record: jest.fn(),
-    } as never);
+    } as never, { emit: jest.fn() } as never);
   });
 
   describe('createTask', () => {

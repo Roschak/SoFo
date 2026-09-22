@@ -1,9 +1,11 @@
 import { Injectable } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { PrismaService } from '../../infrastructure/prisma/prisma.service';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { AuditService } from '../audit/audit.service';
 import { conflict, forbidden, notFound } from '@sofo/shared';
 import { DEFAULT_ROLE_PERMISSIONS } from '@sofo/shared';
+import type { NotificationEventPayload } from '@sofo/shared';
 
 export interface WorkspaceView {
   readonly id: string;
@@ -34,6 +36,7 @@ export class WorkspaceService {
     private readonly prisma: PrismaService,
     private readonly authorizationService: AuthorizationService,
     private readonly auditService: AuditService,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   async createWorkspace(ownerId: string, input: { name: string; mode: 'ENTERPRISE' | 'COMMUNITY'; description?: string }) {
@@ -149,6 +152,19 @@ export class WorkspaceService {
     await this.prisma.workspaceMember.create({
       data: { workspaceId, userId: input.userId, roleId: role.id },
     });
+
+    // ADR-005: PRD §46 MemberInvited.
+    this.eventEmitter.emit('notification.member.invited', {
+      workspaceId,
+      actorId,
+      recipientIds: [input.userId],
+      type: 'member.invited',
+      title: 'Kamu diundang ke workspace',
+      body: `Kamu ditambahkan sebagai ${input.roleName}`,
+      refType: 'workspace',
+      refId: workspaceId,
+    } satisfies NotificationEventPayload);
+
     return { success: true };
   }
 

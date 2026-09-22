@@ -12,10 +12,12 @@ describe('RealtimeBroadcaster', () => {
       id: 'm-1',
       channelId: 'c-1',
       authorId: 'u-1',
+      authorName: 'User One',
       content: 'hi',
       replyToId: null,
+      status: 'VISIBLE',
       editedAt: null,
-      createdAt: new Date(),
+      createdAt: new Date().toISOString(),
       attachments: [],
     });
 

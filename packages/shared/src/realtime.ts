@@ -20,6 +20,8 @@ export interface MessageRealtimeView {
   readonly authorName: string;
   readonly content: string;
   readonly replyToId: string | null;
+  /** Moderation lifecycle (PRD §93): VISIBLE | PENDING_REVIEW | REMOVED. */
+  readonly status: 'VISIBLE' | 'PENDING_REVIEW' | 'REMOVED';
   readonly editedAt: string | null;
   readonly createdAt: string;
   readonly attachments: readonly {
@@ -33,6 +35,14 @@ export interface MessageRealtimeView {
 export interface MessageDeletedEvent {
   readonly messageId: string;
   readonly channelId: string;
+}
+
+/** Fired after a moderator decision (PRD §93). */
+export interface MessageModerationEvent {
+  readonly messageId: string;
+  readonly channelId: string;
+  readonly status: 'VISIBLE' | 'REMOVED';
+  readonly moderatedById: string;
 }
 
 export interface PresenceUpdatedEvent {
@@ -61,9 +71,51 @@ export const REALTIME_CLIENT_EVENTS = [
   'message.created',
   'message.updated',
   'message.deleted',
+  'message.moderated',
   'presence.updated',
   'typing.updated',
+  'notification.created',
+  'notification.read',
 ] as const;
+
+export type NotificationType =
+  | 'request.created'
+  | 'request.approved'
+  | 'request.rejected'
+  | 'member.invited'
+  | 'task.assigned'
+  | 'message.pending';
+
+export interface NotificationView {
+  readonly id: string;
+  readonly workspaceId: string;
+  readonly userId: string;
+  readonly actorId: string | null;
+  readonly actorName: string | null;
+  readonly type: NotificationType;
+  readonly title: string;
+  readonly body: string | null;
+  readonly refType: string | null;
+  readonly refId: string | null;
+  readonly status: 'UNREAD' | 'READ';
+  readonly createdAt: string;
+}
+
+export interface NotificationEventPayload {
+  readonly workspaceId: string;
+  readonly actorId: string;
+  readonly recipientIds: readonly string[];
+  readonly type: NotificationType;
+  readonly title: string;
+  readonly body?: string;
+  readonly refType?: string;
+  readonly refId?: string;
+}
+
+export interface NotificationReadEvent {
+  readonly notificationId: string;
+  readonly readAt: string;
+}
 
 export type RealtimeClientEvent = (typeof REALTIME_CLIENT_EVENTS)[number];
 

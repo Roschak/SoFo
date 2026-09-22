@@ -15,6 +15,7 @@ import {
   TypingPayload,
   TypingUpdatedEvent,
   WorkspaceJoinPayload,
+  userRoom,
   workspaceRoom,
 } from './realtime.types';
 import { RealtimeService } from './realtime.service';
@@ -70,7 +71,11 @@ export class RealtimeGateway implements OnGatewayInit, OnGatewayConnection, OnGa
   async handleConnection(client: AuthenticatedSocket): Promise<void> {
     if (!client.data?.userId) {
       client.disconnect(true);
+      return;
     }
+    // Personal room (ADR-004): every socket of a user joins `user:<id>` so
+    // notification pushes reach all devices of that user.
+    await client.join(userRoom(client.data.userId));
   }
 
   async handleDisconnect(client: AuthenticatedSocket): Promise<void> {

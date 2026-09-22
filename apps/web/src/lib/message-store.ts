@@ -15,6 +15,17 @@ export function updateMessage(messages: Message[], incoming: Message): Message[]
   return messages.map((message) => (message.id === incoming.id ? incoming : message));
 }
 
+/** Applies a moderation decision (PRD §93) without replacing the whole row. */
+export function updateMessageStatus(
+  messages: Message[],
+  messageId: string,
+  status: Message['status'],
+): Message[] {
+  return messages.map((message) =>
+    message.id === messageId ? { ...message, status } : message,
+  );
+}
+
 export function deleteMessage(messages: Message[], messageId: string): Message[] {
   return messages.filter((message) => message.id !== messageId);
 }

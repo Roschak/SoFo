@@ -1,0 +1,133 @@
+.orgtree {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--sofo-sp-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sofo-sp-5);
+}
+
+.orgtree__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--sofo-sp-4);
+  border-bottom: 1px solid var(--sofo-ink-800);
+  padding-bottom: var(--sofo-sp-4);
+}
+
+.orgtree__title {
+  font-size: var(--sofo-fs-xl);
+  font-weight: 700;
+}
+
+.orgtree__subtitle {
+  color: var(--sofo-text-500);
+  font-size: var(--sofo-fs-sm);
+  margin-top: 4px;
+}
+
+.orgtree__error {
+  background: rgb(239 68 68 / 0.15);
+  border: 1px solid var(--sofo-danger);
+  color: #fca5a5;
+  padding: var(--sofo-sp-3) var(--sofo-sp-4);
+  border-radius: var(--sofo-r-md);
+  font-size: var(--sofo-fs-sm);
+}
+
+.orgtree__empty {
+  color: var(--sofo-text-500);
+  font-size: var(--sofo-fs-sm);
+}
+
+.orgtree__empty-box {
+  background: var(--sofo-ink-900);
+  border: 1px solid var(--sofo-ink-700);
+  border-radius: var(--sofo-r-lg);
+  padding: var(--sofo-sp-8);
+  max-width: 480px;
+  text-align: center;
+}
+
+.orgtree__empty-icon {
+  font-size: 40px;
+  margin-bottom: var(--sofo-sp-3);
+  display: inline-block;
+}
+
+.orgtree__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sofo-sp-2);
+}
+
+.orgtree__row {
+  display: flex;
+  align-items: center;
+  gap: var(--sofo-sp-3);
+  background: var(--sofo-ink-900);
+  border: 1px solid var(--sofo-ink-800);
+  border-radius: var(--sofo-r-md);
+  padding: var(--sofo-sp-3) var(--sofo-sp-4);
+  transition: border-color var(--sofo-dur-fast) var(--sofo-ease);
+}
+
+.orgtree__row:hover {
+  border-color: var(--sofo-ink-600);
+}
+
+.orgtree__kind {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  border-radius: var(--sofo-r-full);
+}
+
+.orgtree__kind--department {
+  background: rgb(99 102 241 / 0.15);
+  color: var(--sofo-accent-200);
+}
+
+.orgtree__kind--division {
+  background: rgb(96 165 250 / 0.15);
+  color: var(--sofo-info);
+}
+
+.orgtree__kind--team {
+  background: rgb(52 211 153 / 0.15);
+  color: var(--sofo-success);
+}
+
+.orgtree__name {
+  flex: 1;
+  color: var(--sofo-text-100);
+  font-weight: 600;
+  font-size: var(--sofo-fs-md);
+}
+
+.orgtree__children-count {
+  color: var(--sofo-text-500);
+  font-size: var(--sofo-fs-xs);
+}
+
+.orgtree__form-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: var(--sofo-sp-3);
+}
+
+.orgtree__select {
+  background: var(--sofo-ink-900);
+  border: 1px solid var(--sofo-ink-700);
+  border-radius: var(--sofo-r-md);
+  padding: 8px 12px;
+  color: var(--sofo-text-100);
+  font-size: var(--sofo-fs-sm);
+}

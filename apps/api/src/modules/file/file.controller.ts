@@ -1,5 +1,6 @@
 import {
   Controller,
+  Delete,
   Get,
   Param,
   ParseUUIDPipe,
@@ -35,6 +36,15 @@ export class FileController {
     return this.fileService.upload(userId, workspaceId, file);
   }
 
+  @Get()
+  @RequirePermission('file.download')
+  async list(
+    @CurrentUserId() userId: string,
+    @Param('workspaceId', ParseUUIDPipe) workspaceId: string,
+  ) {
+    return this.fileService.listFiles(userId, workspaceId);
+  }
+
   @Get(':fileId')
   @RequirePermission('file.download')
   async download(
@@ -47,5 +57,15 @@ export class FileController {
     response.setHeader('Content-Type', download.mimeType);
     response.setHeader('Content-Disposition', `attachment; filename="${download.fileName}"`);
     download.stream.pipe(response);
+  }
+
+  @Delete(':fileId')
+  @RequirePermission('file.delete')
+  async remove(
+    @CurrentUserId() userId: string,
+    @Param('workspaceId', ParseUUIDPipe) workspaceId: string,
+    @Param('fileId', ParseUUIDPipe) fileId: string,
+  ) {
+    return this.fileService.softDelete(userId, workspaceId, fileId);
   }
 }

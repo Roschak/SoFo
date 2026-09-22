@@ -36,7 +36,9 @@ describe('WorkspaceService', () => {
     authorizationService = { getMembership: jest.fn(), assertPermission: jest.fn() };
     auditService = { record: jest.fn() };
 
-    service = new WorkspaceService(prisma as never, authorizationService as never, auditService as never);
+    service = new WorkspaceService(prisma as never, authorizationService as never, auditService as never, {
+      emit: jest.fn(),
+    } as never);
   });
 
   describe('createWorkspace', () => {

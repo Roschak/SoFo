@@ -1,0 +1,111 @@
+.members {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sofo-sp-5);
+  padding: var(--sofo-sp-6);
+  overflow-y: auto;
+  min-height: 0;
+}
+
+.members__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sofo-sp-4);
+  flex-wrap: wrap;
+}
+
+.members__title {
+  font-size: var(--sofo-fs-xl);
+  font-weight: 800;
+}
+
+.members__subtitle {
+  color: var(--sofo-text-500);
+  font-size: var(--sofo-fs-sm);
+}
+
+.members__error {
+  color: var(--sofo-danger);
+  font-size: var(--sofo-fs-sm);
+}
+
+.members__list {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sofo-sp-2);
+  max-width: 760px;
+}
+
+.members__row {
+  display: flex;
+  align-items: center;
+  gap: var(--sofo-sp-3);
+  background: var(--sofo-ink-900);
+  border: 1px solid var(--sofo-ink-700);
+  border-radius: var(--sofo-r-md);
+  padding: var(--sofo-sp-3) var(--sofo-sp-4);
+}
+
+.members__who {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.members__name {
+  font-weight: 600;
+  font-size: var(--sofo-fs-md);
+  display: flex;
+  align-items: center;
+  gap: var(--sofo-sp-2);
+}
+
+.members__you {
+  color: var(--sofo-text-500);
+  font-size: var(--sofo-fs-xs);
+  font-weight: 400;
+}
+
+.members__owner-tag {
+  background: var(--sofo-accent-700);
+  color: white;
+  font-size: 10px;
+  font-weight: 700;
+  border-radius: var(--sofo-r-full);
+  padding: 1px var(--sofo-sp-2);
+  letter-spacing: 0.06em;
+}
+
+.members__email {
+  color: var(--sofo-text-500);
+  font-size: var(--sofo-fs-xs);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.members__role {
+  color: var(--sofo-text-300);
+  font-size: var(--sofo-fs-sm);
+  font-weight: 600;
+}
+
+.members__select {
+  background: var(--sofo-ink-900);
+  border: 1px solid var(--sofo-ink-700);
+  border-radius: var(--sofo-r-md);
+  color: var(--sofo-text-100);
+  padding: var(--sofo-sp-2) var(--sofo-sp-3);
+  font-size: var(--sofo-fs-sm);
+}
+
+.members__form-row {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sofo-sp-1);
+  margin-bottom: var(--sofo-sp-4);
+}

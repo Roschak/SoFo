@@ -1,8 +1,10 @@
 import { Injectable } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { PrismaService } from '../../infrastructure/prisma/prisma.service';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { AuditService } from '../audit/audit.service';
 import { conflict, forbidden, notFound } from '@sofo/shared';
+import type { NotificationEventPayload } from '@sofo/shared';
 
 /**
  * Request & Approval domain (PRD §44, §45, §88).
@@ -35,6 +37,7 @@ export class RequestService {
     private readonly prisma: PrismaService,
     private readonly authorizationService: AuthorizationService,
     private readonly auditService: AuditService,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   async createRequest(
@@ -63,6 +66,18 @@ export class RequestService {
       result: 'SUCCESS',
       metadata: { type: created.type, title: created.title },
     });
+
+    // ADR-005: notify potential approvers (holders of request.approve).
+    this.eventEmitter.emit('notification.request.created', {
+      workspaceId,
+      actorId,
+      recipientIds: await this.approverIds(workspaceId),
+      type: 'request.created',
+      title: `Permintaan baru: ${created.title}`,
+      body: `${created.requester?.displayName ?? 'Seseorang'} mengajukan ${created.type.toLowerCase()}`,
+      refType: 'request',
+      refId: created.id,
+    } satisfies NotificationEventPayload);
 
     return this.toView(created);
   }
@@ -140,6 +155,24 @@ export class RequestService {
       metadata: { type: updated.type, requesterId: updated.requesterId, note: decisionNote ?? null },
     });
 
+    // ADR-005: PRD §45 notification hop — the requester learns the decision.
+    this.eventEmitter.emit(
+      decision === 'APPROVED' ? 'notification.request.approved' : 'notification.request.rejected',
+      {
+        workspaceId,
+        actorId,
+        recipientIds: [updated.requesterId],
+        type: decision === 'APPROVED' ? 'request.approved' : 'request.rejected',
+        title:
+          decision === 'APPROVED'
+            ? `Permintaan disetujui: ${updated.title}`
+            : `Permintaan ditolak: ${updated.title}`,
+        body: decisionNote ?? undefined,
+        refType: 'request',
+        refId: updated.id,
+      } satisfies NotificationEventPayload,
+    );
+
     return this.toView(updated);
   }
 
@@ -179,6 +212,15 @@ export class RequestService {
     });
 
     return this.toView(updated);
+  }
+
+  /** Users holding request.approve — potential approvers to notify. */
+  private async approverIds(workspaceId: string): Promise<string[]> {
+    const members = await this.prisma.workspaceMember.findMany({
+      where: { workspaceId, role: { permissions: { has: DECIDE_PERMISSION } } },
+      select: { userId: true },
+    });
+    return members.map((member) => member.userId);
   }
 
   private toView(request: RequestWithRelations): RequestView {

@@ -31,6 +31,7 @@ describe('RequestService', () => {
         findFirst: jest.fn(),
         update: jest.fn(),
       },
+      workspaceMember: { findMany: jest.fn().mockResolvedValue([{ userId: 'u-manager' }]) },
     };
     authorizationService = { assertPermission: jest.fn(), hasPermission: jest.fn().mockResolvedValue(true) };
     auditService = { record: jest.fn() };
@@ -38,6 +39,7 @@ describe('RequestService', () => {
       prisma as never,
       authorizationService as never,
       auditService as never,
+      { emit: jest.fn() } as never,
     );
   });
 

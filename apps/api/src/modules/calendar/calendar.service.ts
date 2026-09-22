@@ -124,8 +124,7 @@ export class CalendarService {
     const horizon = new Date(now.getTime() + horizonDays * 86_400_000);
     // Start of today so events happening later today are included
     // (comparing against `now` drops same-instant entries).
-    const startOfToday = new Date(now);
-    startOfToday.setHours(0, 0, 0, 0);
+    const startOfToday = this.startOfDay(now);
 
     const { items } = await this.getCalendar(actorId, workspaceId, {
       from: startOfToday.toISOString(),
@@ -135,9 +134,14 @@ export class CalendarService {
     return {
       items: items.map((entry) => ({
         ...entry,
+        // Calendar-date difference, not ms-ceil: an event tonight is "0 hari
+        // lagi" (Hari ini), not "Besok".
         dueInDays: Math.max(
           0,
-          Math.ceil((new Date(entry.startAt).getTime() - now.getTime()) / 86_400_000),
+          Math.round(
+            (this.startOfDay(new Date(entry.startAt)).getTime() - startOfToday.getTime()) /
+              86_400_000,
+          ),
         ),
       })),
     };
@@ -203,6 +207,12 @@ export class CalendarService {
       metadata: { title: event.title },
     });
     return { success: true };
+  }
+
+  private startOfDay(date: Date): Date {
+    const copy = new Date(date);
+    copy.setHours(0, 0, 0, 0);
+    return copy;
   }
 
   private async projectIdsIn(workspaceId: string): Promise<string[]> {

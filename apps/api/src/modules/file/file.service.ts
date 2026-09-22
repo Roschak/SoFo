@@ -15,6 +15,16 @@ export interface UploadedFileInfo {
   readonly sizeBytes: number;
 }
 
+export interface FileListItem {
+  readonly id: string;
+  readonly fileName: string;
+  readonly mimeType: string;
+  readonly sizeBytes: number;
+  readonly uploaderId: string;
+  readonly uploaderName: string | null;
+  readonly createdAt: string;
+}
+
 export interface FileDownload {
   readonly stream: import('node:fs').ReadStream;
   readonly fileName: string;
@@ -79,6 +89,28 @@ export class FileService {
       mimeType: record.mimeType,
       sizeBytes: record.sizeBytes,
     };
+  }
+
+  /** Workspace file listing (active files, newest first) for the Files UI. */
+  async listFiles(actorId: string, workspaceId: string): Promise<FileListItem[]> {
+    await this.authorizationService.assertPermission(actorId, workspaceId, 'file.download');
+
+    const records = await this.prisma.file.findMany({
+      where: { workspaceId, deletedAt: null },
+      orderBy: { createdAt: 'desc' },
+      take: 200,
+      include: { uploader: { select: { displayName: true } } },
+    });
+
+    return records.map((record) => ({
+      id: record.id,
+      fileName: record.fileName,
+      mimeType: record.mimeType,
+      sizeBytes: record.sizeBytes,
+      uploaderId: record.uploaderId,
+      uploaderName: record.uploader?.displayName ?? null,
+      createdAt: record.createdAt.toISOString(),
+    }));
   }
 
   async download(actorId: string, workspaceId: string, fileId: string): Promise<FileDownload> {

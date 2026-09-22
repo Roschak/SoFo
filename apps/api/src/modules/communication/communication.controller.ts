@@ -5,6 +5,12 @@ import { CurrentUserId } from '../authentication/decorators/current-user.decorat
 import { RequireSession } from '../authentication/decorators/require-session.decorator';
 import { RequirePermission } from '../authorization/decorators/require-permission.decorator';
 
+/**
+ * Community moderation endpoints (PRD §93): queue listing + approve/remove
+ * decisions. Both are permission-gated (`moderation.queue.view` /
+ * `message.moderate`) — held by MODERATOR, ADMIN, OWNER.
+ */
+
 @Controller('workspaces/:workspaceId')
 @RequireSession()
 export class CommunicationController {
@@ -70,5 +76,34 @@ export class CommunicationController {
     @Param('messageId', ParseUUIDPipe) messageId: string,
   ) {
     return this.communicationService.deleteMessage(userId, workspaceId, messageId);
+  }
+
+  @Get('moderation/queue')
+  @RequirePermission('moderation.queue.view')
+  async moderationQueue(
+    @CurrentUserId() userId: string,
+    @Param('workspaceId', ParseUUIDPipe) workspaceId: string,
+  ) {
+    return this.communicationService.listModerationQueue(userId, workspaceId);
+  }
+
+  @Post('messages/:messageId/approve')
+  @RequirePermission('message.moderate')
+  async approveMessage(
+    @CurrentUserId() userId: string,
+    @Param('workspaceId', ParseUUIDPipe) workspaceId: string,
+    @Param('messageId', ParseUUIDPipe) messageId: string,
+  ) {
+    return this.communicationService.approveMessage(userId, workspaceId, messageId);
+  }
+
+  @Post('messages/:messageId/remove')
+  @RequirePermission('message.moderate')
+  async removeMessage(
+    @CurrentUserId() userId: string,
+    @Param('workspaceId', ParseUUIDPipe) workspaceId: string,
+    @Param('messageId', ParseUUIDPipe) messageId: string,
+  ) {
+    return this.communicationService.removeMessage(userId, workspaceId, messageId);
   }
 }

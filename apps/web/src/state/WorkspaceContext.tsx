@@ -21,6 +21,7 @@ import {
   deleteMessage as removeMessageFromList,
   mergePage,
   updateMessage,
+  updateMessageStatus,
 } from '../lib/message-store';
 import {
   bindRealtimeHandlers,
@@ -49,6 +50,7 @@ interface WorkspaceContextValue {
   setActiveWorkspace: (workspace: Workspace) => void;
   setActiveChannel: (channel: Channel) => void;
   refreshWorkspaces: () => Promise<void>;
+  refreshMembers: () => Promise<void>;
   createWorkspace: (input: { name: string; mode: 'ENTERPRISE' | 'COMMUNITY' }) => Promise<void>;
   createChannel: (input: { name: string; type: string; visibility: string }) => Promise<void>;
   sendMessage: (content: string) => Promise<void>;
@@ -141,6 +143,21 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
         if (event.channelId === activeChannelIdRef.current) {
           setMessages((current) => removeMessageFromList(current, event.messageId));
         }
+      },
+      onMessageModerated: (event) => {
+        if (event.channelId === activeChannelIdRef.current) {
+          setMessages((current) =>
+            updateMessageStatus(current, event.messageId, event.status),
+          );
+        }
+      },
+      onNotificationCreated: (notification) => {
+        window.dispatchEvent(
+          new CustomEvent('sofo:notification.created', { detail: notification }),
+        );
+      },
+      onNotificationRead: (event) => {
+        window.dispatchEvent(new CustomEvent('sofo:notification.read', { detail: event }));
       },
       onPresenceUpdated: handleJoinPresence,
       onTypingUpdated: (event: TypingUpdatedEvent) => {
@@ -245,6 +262,16 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
     setActiveChannelState(channel);
     setMessages([]);
   }, []);
+
+  const refreshMembers = useCallback(async () => {
+    if (!token || !activeWorkspace) return;
+    const list = await api<Member[]>(`/workspaces/${activeWorkspace.id}/members`, {
+      method: 'GET',
+      token,
+      workspaceId: activeWorkspace.id,
+    });
+    setMembers(list);
+  }, [token, activeWorkspace?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const createWorkspace = useCallback(
     async (input: { name: string; mode: 'ENTERPRISE' | 'COMMUNITY' }) => {
@@ -353,6 +380,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       setActiveWorkspace,
       setActiveChannel,
       refreshWorkspaces,
+      refreshMembers,
       createWorkspace,
       createChannel,
       sendMessage,
@@ -377,6 +405,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       setActiveWorkspace,
       setActiveChannel,
       refreshWorkspaces,
+      refreshMembers,
       createWorkspace,
       createChannel,
       sendMessage,

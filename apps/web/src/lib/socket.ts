@@ -1,7 +1,10 @@
 import { io, type Socket } from 'socket.io-client';
 import type {
   MessageDeletedEvent,
+  MessageModerationEvent,
   MessageRealtimeView,
+  NotificationReadEvent,
+  NotificationView,
   PresenceUpdatedEvent,
   TypingPayload,
   TypingUpdatedEvent,
@@ -26,8 +29,11 @@ export interface RealtimeHandlers {
   onMessageCreated: (message: MessageRealtimeView) => void;
   onMessageUpdated: (message: MessageRealtimeView) => void;
   onMessageDeleted: (event: MessageDeletedEvent) => void;
+  onMessageModerated: (event: MessageModerationEvent) => void;
   onPresenceUpdated: (event: PresenceUpdatedEvent) => void;
   onTypingUpdated: (event: TypingUpdatedEvent) => void;
+  onNotificationCreated: (notification: NotificationView) => void;
+  onNotificationRead: (event: NotificationReadEvent) => void;
   onDisconnected: () => void;
   onReconnected: () => void;
 }
@@ -36,8 +42,11 @@ export function bindRealtimeHandlers(socket: Socket, handlers: RealtimeHandlers)
   socket.on('message.created', handlers.onMessageCreated);
   socket.on('message.updated', handlers.onMessageUpdated);
   socket.on('message.deleted', handlers.onMessageDeleted);
+  socket.on('message.moderated', handlers.onMessageModerated);
   socket.on('presence.updated', handlers.onPresenceUpdated);
   socket.on('typing.updated', handlers.onTypingUpdated);
+  socket.on('notification.created', handlers.onNotificationCreated);
+  socket.on('notification.read', handlers.onNotificationRead);
   socket.on('disconnect', handlers.onDisconnected);
   socket.on('reconnect', handlers.onReconnected);
 }

@@ -25,8 +25,13 @@ model User {
   sessions         Session[]
   workspaceMembers WorkspaceMember[]
   messages         Message[]
+  messagesModerated Message[] @relation("ModeratedMessages")
+  filesUploaded    File[] @relation("FilesUploaded")
+  attendanceRecords AttendanceRecord[]
   requestsMade     Request[] @relation("RequestsMade")
   requestsDecided  Request[] @relation("RequestsDecided")
+  notifications    Notification[] @relation("NotificationsFor")
+  notificationsActed Notification[] @relation("NotificationsActed")
   auditLogs        AuditLog[]
 
   @@index([email])
@@ -74,6 +79,8 @@ model Workspace {
   meetings    Meeting[]
   calendarEvents CalendarEvent[]
   requests    Request[]
+  notifications Notification[]
+  attendanceRecords AttendanceRecord[]
   auditLogs   AuditLog[]
 
   @@index([ownerId])
@@ -177,11 +184,24 @@ model Message {
   replyTo     Message?  @relation("MessageThread", fields: [replyToId], references: [id], onDelete: SetNull)
   replies     Message[] @relation("MessageThread")
   attachments File[]    @relation("MessageAttachments")
+  status      MessageStatus @default(VISIBLE)
+  moderatedById String?
+  moderatedBy User?     @relation("ModeratedMessages", fields: [moderatedById], references: [id], onDelete: SetNull)
+  moderatedAt DateTime?
   editedAt    DateTime?
   deletedAt   DateTime?
   createdAt   DateTime  @default(now())
 
   @@index([channelId, createdAt])
+  @@index([channelId, status, createdAt])
+}
+
+/// Community moderation lifecycle (PRD §93): messages land in PENDING_REVIEW
+/// in COMMUNITY workspaces and are approved or removed by MODERATOR+.
+enum MessageStatus {
+  VISIBLE
+  PENDING_REVIEW
+  REMOVED
 }
 
 // ─── 12 FILE ─────────────────────────────────────────────────────────────────
@@ -197,6 +217,7 @@ model File {
   storagePath String
   messageId   String?
   message     Message?  @relation("MessageAttachments", fields: [messageId], references: [id], onDelete: SetNull)
+  uploader    User      @relation("FilesUploaded", fields: [uploaderId], references: [id], onDelete: Cascade)
   deletedAt   DateTime?
   createdAt   DateTime  @default(now())
 
@@ -330,6 +351,32 @@ model CalendarEvent {
   @@index([workspaceId, startAt])
 }
 
+// ─── 18 ATTENDANCE (PRD §42, §87) — Enterprise Mode only ─────────────────────
+
+enum AttendanceStatus {
+  ON_TIME
+  LATE
+}
+
+model AttendanceRecord {
+  id          String   @id @default(uuid())
+  workspaceId String
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workDate    DateTime @db.Date
+  clockInAt   DateTime
+  clockOutAt  DateTime?
+  status      AttendanceStatus @default(ON_TIME)
+  minutesLate Int      @default(0)
+  note        String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([workspaceId, userId, workDate])
+  @@index([workspaceId, workDate])
+}
+
 // ─── 19 REQUEST & APPROVAL (PRD §44, §45, §88) ─────────────────────────────
 
 enum RequestType {
@@ -366,6 +413,34 @@ model Request {
 
   @@index([workspaceId, status])
   @@index([requesterId])
+}
+
+// ─── 46 NOTIFICATION (PRD §46, §89, ADR-005) ───────────────────────────────
+
+model Notification {
+  id          String   @id @default(uuid())
+  workspaceId String
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User     @relation("NotificationsFor", fields: [userId], references: [id], onDelete: Cascade)
+  actorId     String?
+  actor       User?    @relation("NotificationsActed", fields: [actorId], references: [id], onDelete: SetNull)
+  type        String
+  title       String
+  body        String?
+  refType     String?
+  refId       String?
+  status      NotificationStatus @default(UNREAD)
+  readAt      DateTime?
+  createdAt   DateTime @default(now())
+
+  @@index([userId, status, createdAt])
+  @@index([workspaceId])
+}
+
+enum NotificationStatus {
+  UNREAD
+  READ
 }
 
 // ─── 23 AUDIT ────────────────────────────────────────────────────────────────

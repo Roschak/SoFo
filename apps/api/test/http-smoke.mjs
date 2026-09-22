@@ -572,7 +572,356 @@ async function main() {
     auditTrail.status === 200 && auditTrail.data.items.length > 0,
   );
 
+  console.log('\n=== 6e. NOTIFICATION (PRD §46, §47, §89; ADR-005) ===');
+  // request.created → staff (requester) TIDAK diberi tahu (actor filter);
+  // owner (pemegang request.approve) menerima notif permintaan baru.
+  await new Promise((resolve) => setTimeout(resolve, 300)); // beri waktu handler event bus
+  const ownerInbox = await call('GET', '/notifications', { token: loginOwner.data.token });
+  check(
+    'owner inbox berisi request.created (approver dinotifikasi)',
+    ownerInbox.status === 200 &&
+      ownerInbox.data.items.some((item) => item.type === 'request.created'),
+    JSON.stringify(ownerInbox.data),
+  );
+
+  const ownerUnread = await call('GET', '/notifications/unread-count', { token: loginOwner.data.token });
+  check('unread-count 200 + angka konsisten', ownerUnread.status === 200 &&
+    ownerUnread.data.count === ownerInbox.data.items.filter((item) => item.status === 'UNREAD').length,
+  );
+
+  // task.assigned → assignee menerima notif (PRD §46 TaskAssigned).
+  const staffInbox = await call('GET', '/notifications', { token: staffToken });
+  check(
+    'staff inbox berisi member.invited (diundang owner)',
+    staffInbox.status === 200 && staffInbox.data.items.some((item) => item.type === 'member.invited'),
+    JSON.stringify(staffInbox.data),
+  );
+
+  // request.approved → requester (staff) menerima notif keputusan.
+  check(
+    'staff inbox berisi request.approved',
+    staffInbox.data.items.some((item) => item.type === 'request.approved'),
+  );
+
+  // Pemilik-only access & mark read.
+  const notifId = staffInbox.data.items[0].id;
+  const wrongOwnerRead = await call('POST', `/notifications/${notifId}/read`, { token: loginOwner.data.token });
+  check('mark read milik orang lain tetap sukses tapi tanpa efek (updateMany 0)', wrongOwnerRead.status === 200 || wrongOwnerRead.status === 201, JSON.stringify(wrongOwnerRead.data));
+  const afterWrongRead = await call('GET', '/notifications', { token: staffToken });
+  check(
+    'notif staff tetap UNREAD setelah percobaan mark oleh owner',
+    afterWrongRead.data.items.find((item) => item.id === notifId)?.status === 'UNREAD',
+  );
+
+  const markRead = await call('POST', `/notifications/${notifId}/read`, { token: staffToken });
+  check('mark read 200/201', markRead.status === 200 || markRead.status === 201, JSON.stringify(markRead.data));
+  const staffUnreadAfter = await call('GET', '/notifications/unread-count', { token: staffToken });
+  check('unread-count turun setelah mark read', staffUnreadAfter.data.count === staffInbox.data.items.filter((item) => item.status === 'UNREAD').length - 1);
+
+  const markAll = await call('POST', '/notifications/read-all', { token: staffToken });
+  check('read-all 200/201', markAll.status === 200 || markAll.status === 201, JSON.stringify(markAll.data));
+  const staffUnreadFinal = await call('GET', '/notifications/unread-count', { token: staffToken });
+  check('unread-count 0 setelah read-all', staffUnreadFinal.data.count === 0);
+
+  const noSession = await call('GET', '/notifications');
+  check('notification tanpa sesi 401', noSession.status === 401);
+
+  console.log('\n=== 6f. ATTENDANCE (PRD §42, §87) — Enterprise only ===');
+  // Workspace smoke ini ENTERPRISE — clock in/out berjalan penuh.
+  const today = await call('GET', `/workspaces/${workspaceId}/attendance/today`, {
+    token: staffToken,
+    workspaceId,
+  });
+  check('staff GET today (belum clock in) 200 + null', today.status === 200 && today.data === null, JSON.stringify(today.data));
+
+  const clockIn = await call('POST', `/workspaces/${workspaceId}/attendance/clock-in`, {
+    token: staffToken,
+    workspaceId,
+    body: { note: 'Masuk pagi' },
+  });
+  check(
+    'staff clock-in 201 + status valid (ON_TIME/LATE sesuai jam server)',
+    clockIn.status === 201 && ['ON_TIME', 'LATE'].includes(clockIn.data.status) && clockIn.data.clockOutAt === null,
+    JSON.stringify(clockIn.data),
+  );
+
+  const doubleIn = await call('POST', `/workspaces/${workspaceId}/attendance/clock-in`, {
+    token: staffToken,
+    workspaceId,
+    body: {},
+  });
+  check('clock-in kedua di hari sama 409 CONFLICT', doubleIn.status === 409);
+
+  const clockOut = await call('POST', `/workspaces/${workspaceId}/attendance/clock-out`, {
+    token: staffToken,
+    workspaceId,
+  });
+  check(
+    'staff clock-out 201 + workedMinutes >= 0',
+    clockOut.status === 201 &&
+      clockOut.data.clockOutAt !== null &&
+      Number.isInteger(clockOut.data.workedMinutes) &&
+      clockOut.data.workedMinutes >= 0,
+    JSON.stringify(clockOut.data),
+  );
+
+  const doubleOut = await call('POST', `/workspaces/${workspaceId}/attendance/clock-out`, {
+    token: staffToken,
+    workspaceId,
+  });
+  check('clock-out kedua 409 CONFLICT', doubleOut.status === 409);
+
+  const attHistory = await call('GET', `/workspaces/${workspaceId}/attendance/history`, {
+    token: ownerToken,
+    workspaceId,
+  });
+  check(
+    'owner (attendance.view) lihat history + userName ter-resolve',
+    attHistory.status === 200 &&
+      attHistory.data.items.length > 0 &&
+      attHistory.data.items.every((item) => 'status' in item && 'clockInAt' in item),
+    JSON.stringify(attHistory.data),
+  );
+
+  const attAudit = await call('GET', `/workspaces/${workspaceId}/audit?action=attendance.clock_in`, {
+    token: ownerToken,
+    workspaceId,
+  });
+  check('audit mencatat attendance.clock_in', attAudit.status === 200 && attAudit.data.items.length > 0);
+
+  const attOutsider = await call('GET', `/workspaces/${workspaceId}/attendance/history`, {
+    token: outsiderToken,
+    workspaceId,
+  });
+  check('outsider attendance history 403', attOutsider.status === 403);
+
+  // COMMUNITY workspace: attendance harus tertutup meski role OWNER punya
+  // permission attendance.* — gate enterprise di service (PRD §42).
+  const communityWs = await call('POST', '/workspaces', {
+    token: ownerToken,
+    body: { name: `Community ${unique}`, mode: 'COMMUNITY' },
+  });
+  check('setup: workspace COMMUNITY dibuat', communityWs.status === 201, JSON.stringify(communityWs.data));
+  const communityClock = await call('POST', `/workspaces/${communityWs.data.id}/attendance/clock-in`, {
+    token: ownerToken,
+    workspaceId: communityWs.data.id,
+    body: {},
+  });
+  check(
+    'COMMUNITY workspace clock-in 403 (gate enterprise-only)',
+    communityClock.status === 403,
+    JSON.stringify(communityClock.data),
+  );
+  const communityHistory = await call('GET', `/workspaces/${communityWs.data.id}/attendance/history`, {
+    token: ownerToken,
+    workspaceId: communityWs.data.id,
+  });
+  check('COMMUNITY workspace history 403', communityHistory.status === 403);
+
+  console.log('\n=== 6g. GLOBAL SEARCH (PRD §48, §90) ===');
+  const searchAll = await call('GET', `/workspaces/${workspaceId}/search?q=general&type=all`, {
+    token: ownerToken,
+    workspaceId,
+  });
+  check(
+    'search all 200 + items array',
+    searchAll.status === 200 && Array.isArray(searchAll.data.items),
+    JSON.stringify(searchAll.data),
+  );
+
+  const searchChannel = await call('GET', `/workspaces/${workspaceId}/search?q=general&type=channel`, {
+    token: staffToken,
+    workspaceId,
+  });
+  check(
+    'search filter channel 200',
+    searchChannel.status === 200 && searchChannel.data.items.every((i) => i.type === 'channel'),
+    JSON.stringify(searchChannel.data),
+  );
+
+  const searchOutsider = await call('GET', `/workspaces/${workspaceId}/search?q=general&type=all`, {
+    token: outsiderToken,
+    workspaceId,
+  });
+  check('outsider search 403 (authorization-aware gate)', searchOutsider.status === 403);
+
+  console.log('\n=== 6h. ADMIN DASHBOARD (PRD §92) ===');
+  const adminStats = await call('GET', `/workspaces/${workspaceId}/admin/stats?days=14`, {
+    token: ownerToken,
+    workspaceId,
+  });
+  check(
+    'owner admin stats 200 + agregasi lengkap',
+    adminStats.status === 200 &&
+      adminStats.data.workspace.id === workspaceId &&
+      Number.isInteger(adminStats.data.stats.totalMembers) &&
+      adminStats.data.stats.totalMembers > 0 &&
+      Number.isInteger(adminStats.data.stats.storageUsedBytes) &&
+      Array.isArray(adminStats.data.activityTrend.messages) &&
+      adminStats.data.activityTrend.messages.length === 14 &&
+      Array.isArray(adminStats.data.recentMembers),
+    JSON.stringify(adminStats.data).slice(0, 200),
+  );
+
+  const adminTrend = await call('GET', `/workspaces/${workspaceId}/admin/stats?days=7`, {
+    token: ownerToken,
+    workspaceId,
+  });
+  check(
+    'trend days=7 → 7 bucket harian',
+    adminTrend.status === 200 && adminTrend.data.activityTrend.messages.length === 7,
+  );
+
+  const adminStatsStaff = await call('GET', `/workspaces/${workspaceId}/admin/stats`, {
+    token: staffToken,
+    workspaceId,
+  });
+  check(
+    'staff tanpa workspace.settings.manage 403',
+    adminStatsStaff.status === 403,
+    JSON.stringify(adminStatsStaff.data),
+  );
+
+  const adminSuspended = await call('GET', `/workspaces/${workspaceId}/admin/suspended`, {
+    token: ownerToken,
+    workspaceId,
+  });
+  check(
+    'owner admin suspended 200 + items array',
+    adminSuspended.status === 200 && Array.isArray(adminSuspended.data.items),
+    JSON.stringify(adminSuspended.data),
+  );
+
+  console.log('\n=== 6i2. COMMUNITY MODERATION (PRD §93) ===');
+  // Workspace COMMUNITY sudah dibuat di bagian attendance; pakai itu.
+  const communityWsId = communityWs.data.id;
+
+  // Member COMMUNITY biasa: daftarkan staffUser ke workspace COMMUNITY.
+  const communityInvite = await call('POST', `/workspaces/${communityWsId}/members`, {
+    token: ownerToken,
+    workspaceId: communityWsId,
+    body: { userId: staffUser.data.id, roleName: 'MEMBER' },
+  });
+  check('invite MEMBER ke workspace COMMUNITY 201', communityInvite.status === 201 || communityInvite.status === 200, JSON.stringify(communityInvite.data));
+
+  const communityChannel = await call('POST', `/workspaces/${communityWsId}/channels`, {
+    token: ownerToken,
+    workspaceId: communityWsId,
+    body: { name: 'umum', type: 'TEXT', visibility: 'PUBLIC' },
+  });
+  check('channel COMMUNITY 201', communityChannel.status === 201, JSON.stringify(communityChannel.data));
+  const communityChannelId = communityChannel.data.id;
+
+  const memberPost = await call('POST', `/workspaces/${communityWsId}/channels/${communityChannelId}/messages`, {
+    token: staffToken,
+    workspaceId: communityWsId,
+    body: { content: 'Halo komunitas, butuh moderasi' },
+  });
+  check(
+    'pesan MEMBER di COMMUNITY masuk PENDING_REVIEW (moderasi otomatis)',
+    memberPost.status === 201 && memberPost.data.status === 'PENDING_REVIEW',
+    JSON.stringify(memberPost.data),
+  );
+
+  const ownerPost = await call('POST', `/workspaces/${communityWsId}/channels/${communityChannelId}/messages`, {
+    token: ownerToken,
+    workspaceId: communityWsId,
+    body: { content: 'Pesan owner langsung tampil' },
+  });
+  check(
+    'pesan OWNER (message.moderate) langsung VISIBLE',
+    ownerPost.status === 201 && ownerPost.data.status === 'VISIBLE',
+    JSON.stringify(ownerPost.data),
+  );
+
+  const memberFeed = await call('GET', `/workspaces/${communityWsId}/channels/${communityChannelId}/messages`, {
+    token: staffToken,
+    workspaceId: communityWsId,
+  });
+  check(
+    'member tidak melihat PENDING_REVIEW di feed',
+    memberFeed.status === 200 && memberFeed.data.items.every((m) => m.status === 'VISIBLE'),
+    JSON.stringify(memberFeed.data),
+  );
+
+  const modQueue = await call('GET', `/workspaces/${communityWsId}/moderation/queue`, {
+    token: ownerToken,
+    workspaceId: communityWsId,
+  });
+  check(
+    'moderation queue berisi pesan MEMBER',
+    modQueue.status === 200 && modQueue.data.items.some((m) => m.id === memberPost.data.id),
+    JSON.stringify(modQueue.data),
+  );
+
+  const modQueueMember = await call('GET', `/workspaces/${communityWsId}/moderation/queue`, {
+    token: staffToken,
+    workspaceId: communityWsId,
+  });
+  check('MEMBER akses queue 403 (moderation.queue.view)', modQueueMember.status === 403);
+
+  const approveMsg = await call('POST', `/workspaces/${communityWsId}/messages/${memberPost.data.id}/approve`, {
+    token: ownerToken,
+    workspaceId: communityWsId,
+  });
+  check(
+    'approve → status VISIBLE + moderatedById tercatat',
+    approveMsg.status === 201 && approveMsg.data.status === 'VISIBLE',
+    JSON.stringify(approveMsg.data),
+  );
+
+  const reApprove = await call('POST', `/workspaces/${communityWsId}/messages/${memberPost.data.id}/approve`, {
+    token: ownerToken,
+    workspaceId: communityWsId,
+  });
+  check('approve ulang pesan VISIBLE 409 CONFLICT', reApprove.status === 409);
+
+  const removeMsg = await call('POST', `/workspaces/${communityWsId}/messages/${ownerPost.data.id}/remove`, {
+    token: ownerToken,
+    workspaceId: communityWsId,
+  });
+  check(
+    'remove → status REMOVED',
+    removeMsg.status === 201 && removeMsg.data.status === 'REMOVED',
+    JSON.stringify(removeMsg.data),
+  );
+
+  const memberFeedAfter = await call('GET', `/workspaces/${communityWsId}/channels/${communityChannelId}/messages`, {
+    token: staffToken,
+    workspaceId: communityWsId,
+  });
+  check(
+    'pesan REMOVED hilang dari feed member',
+    memberFeedAfter.status === 200 && memberFeedAfter.data.items.every((m) => m.id !== ownerPost.data.id),
+    JSON.stringify(memberFeedAfter.data),
+  );
+
+  const modAudit = await call('GET', `/workspaces/${communityWsId}/audit?action=message.remove`, {
+    token: ownerToken,
+    workspaceId: communityWsId,
+  });
+  check('audit mencatat message.remove', modAudit.status === 200 && modAudit.data.items.length > 0);
+
+  console.log('\n=== 6i. HEALTH CHECK (PRD §121) ===');
+  const health = await call('GET', '/health');
+  check(
+    'GET /health 200 + status ok + database up',
+    health.status === 200 &&
+      health.data.status === 'ok' &&
+      health.data.checks.database === 'up' &&
+      typeof health.data.uptimeSeconds === 'number',
+    JSON.stringify(health.data),
+  );
+
+  console.log('\n=== 6j. RATE LIMITING (PRD §139) ===');
+  const rateLimitProbe = await call('GET', '/health');
+  check(
+    'health endpoint tanpa rate limit (public probe)',
+    rateLimitProbe.status === 200,
+  );
+
   console.log('\n=== 7. LOGOUT ===');
+
   const logout = await call('DELETE', '/auth/session', { token: staffToken });
   check('logout 200/201', logout.status === 200 || logout.status === 201);
 

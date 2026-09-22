@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useAuth } from '../../state/AuthContext';
 import { useWorkspace } from '../../state/WorkspaceContext';
+import { api } from '../../lib/api';
 import { Button } from '../../components/ui/Button';
 import { Field } from '../../components/ui/Field';
 import { Modal } from '../../components/ui/Modal';
@@ -9,11 +10,44 @@ import { ChannelView } from './ChannelView';
 import { MeetingsView } from './MeetingsView';
 import { AuditView } from './AuditView';
 import { CalendarView } from './CalendarView';
+import { RequestsView } from './RequestsView';
+import { ProjectsView } from './ProjectsView';
+import { FilesView } from './FilesView';
+import { MembersView } from './MembersView';
+import { AttendanceView } from './AttendanceView';
+import { AdminView } from './AdminView';
+import { OrgTreeView } from './OrgTreeView';
+import { ModerationQueueView } from './ModerationQueueView';
+import { ClientPortalView } from './ClientPortalView';
+import { NotificationBell } from './NotificationBell';
 import { canViewAudit } from '../../lib/audit-view';
+import { canViewAdmin } from '../../lib/admin-view';
+import { canModerate } from '../../lib/moderation-view';
 import './ChatShell.css';
 
-type Dialog = 'none' | 'workspace' | 'channel';
-type View = 'chat' | 'meetings' | 'audit' | 'calendar';
+interface SearchItem {
+  id: string;
+  type: 'channel' | 'message' | 'project' | 'task' | 'file' | 'member';
+  title: string;
+  snippet: string | null;
+  refId: string;
+}
+
+type Dialog = 'none' | 'workspace' | 'channel' | 'search';
+type View =
+  | 'chat'
+  | 'meetings'
+  | 'audit'
+  | 'calendar'
+  | 'requests'
+  | 'projects'
+  | 'files'
+  | 'members'
+  | 'attendance'
+  | 'admin'
+  | 'orgtree'
+  | 'moderation'
+  | 'client-portal';
 
 export function ChatShell() {
   const { session, logout } = useAuth();
@@ -40,9 +74,28 @@ export function ChatShell() {
   const [busy, setBusy] = useState(false);
   const [dialogError, setDialogError] = useState<string | null>(null);
 
+  // Search state
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchType, setSearchType] = useState<string>('all');
+  const [searchResults, setSearchResults] = useState<SearchItem[]>([]);
+  const [searchLoading, setSearchLoading] = useState(false);
+
+
   const isOnline = (userId: string) => onlineUserIds.includes(userId);
   const myRole = members.find((member) => member.user.id === session?.user.id)?.role;
   const auditVisible = canViewAudit(myRole);
+  const adminVisible = canViewAdmin(myRole);
+  const moderationVisible = canModerate(myRole) && activeWorkspace?.mode === 'COMMUNITY';
+  // Client/Guest users get the dedicated read-only portal instead of the full
+  // workspace shell (PRD §51, §94).
+  const isExternalUser = myRole === 'CLIENT' || myRole === 'GUEST';
+
+  // External users (CLIENT/GUEST) start in their dedicated portal view.
+  useEffect(() => {
+    if (isExternalUser) {
+      setView('client-portal');
+    }
+  }, [isExternalUser]);
 
   async function handleCreateWorkspace() {
     setBusy(true);
@@ -72,13 +125,93 @@ export function ChatShell() {
     }
   }
 
+  const triggerSearch = useCallback(
+    async (query: string, type: string) => {
+      if (!session?.token || !activeWorkspace || query.trim().length === 0) {
+        setSearchResults([]);
+        return;
+      }
+      setSearchLoading(true);
+      try {
+        const res = await api<{ items: SearchItem[] }>(
+          `/workspaces/${activeWorkspace.id}/search?q=${encodeURIComponent(query.trim())}&type=${type}`,
+          {
+            method: 'GET',
+            token: session.token,
+            workspaceId: activeWorkspace.id,
+          },
+        );
+        setSearchResults(res.items ?? []);
+      } catch {
+        setSearchResults([]);
+      } finally {
+        setSearchLoading(false);
+      }
+    },
+    [activeWorkspace, session?.token],
+  );
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (searchQuery.trim().length > 0) {
+        void triggerSearch(searchQuery, searchType);
+      } else {
+        setSearchResults([]);
+      }
+    }, 250);
+    return () => clearTimeout(timer);
+  }, [searchQuery, searchType, triggerSearch]);
+
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        if (activeWorkspace) {
+          setDialog((prev) => (prev === 'search' ? 'none' : 'search'));
+        }
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [activeWorkspace]);
+
+  function handleSelectSearchResult(item: SearchItem) {
+    setDialog('none');
+    if (item.type === 'channel' || item.type === 'message') {
+      const ch = channels.find((c) => c.id === item.refId);
+      if (ch) {
+        setActiveChannel(ch);
+      }
+      setView('chat');
+    } else if (item.type === 'project' || item.type === 'task') {
+      setView('projects');
+    } else if (item.type === 'file') {
+      setView('files');
+    } else if (item.type === 'member') {
+      setView('members');
+    }
+  }
+
   return (
     <div className="shell">
       <aside className="shell__nav">
         <div className="shell__brand">SOFO</div>
 
+        {activeWorkspace ? (
+          <button
+            className="shell__search-trigger"
+            onClick={() => setDialog('search')}
+            title="Cari di workspace (Ctrl+K)"
+          >
+            <span>🔍</span>
+            <span className="shell__search-trigger-text">Cari...</span>
+            <kbd className="shell__search-trigger-kbd">Ctrl K</kbd>
+          </button>
+        ) : null}
+
         <div className="shell__section">
           <div className="shell__section-head">
+
             <span>Workspace</span>
             <button
               className="shell__add"
@@ -169,6 +302,64 @@ export function ChatShell() {
                   Kalender
                 </button>
               </li>
+              <li>
+                <button
+                  className={`shell__item${view === 'projects' ? ' shell__item--active' : ''}`}
+                  onClick={() => setView('projects')}
+                >
+                  <span className="shell__hash">▣</span>
+                  Proyek
+                </button>
+              </li>
+              <li>
+                <button
+                  className={`shell__item${view === 'requests' ? ' shell__item--active' : ''}`}
+                  onClick={() => setView('requests')}
+                >
+                  <span className="shell__hash">✓</span>
+                  Permintaan
+                </button>
+              </li>
+              <li>
+                <button
+                  className={`shell__item${view === 'files' ? ' shell__item--active' : ''}`}
+                  onClick={() => setView('files')}
+                >
+                  <span className="shell__hash">▣</span>
+                  File
+                </button>
+              </li>
+              <li>
+                <button
+                  className={`shell__item${view === 'members' ? ' shell__item--active' : ''}`}
+                  onClick={() => setView('members')}
+                >
+                  <span className="shell__hash">◉</span>
+                  Anggota
+                </button>
+              </li>
+              {activeWorkspace.mode === 'ENTERPRISE' ? (
+                <>
+                  <li>
+                    <button
+                      className={`shell__item${view === 'attendance' ? ' shell__item--active' : ''}`}
+                      onClick={() => setView('attendance')}
+                    >
+                      <span className="shell__hash">⏱</span>
+                      Presensi
+                    </button>
+                  </li>
+                  <li>
+                    <button
+                      className={`shell__item${view === 'orgtree' ? ' shell__item--active' : ''}`}
+                      onClick={() => setView('orgtree')}
+                    >
+                      <span className="shell__hash">⌗</span>
+                      Organisasi
+                    </button>
+                  </li>
+                </>
+              ) : null}
               {auditVisible ? (
                 <li>
                   <button
@@ -180,9 +371,32 @@ export function ChatShell() {
                   </button>
                 </li>
               ) : null}
+              {moderationVisible ? (
+                <li>
+                  <button
+                    className={`shell__item${view === 'moderation' ? ' shell__item--active' : ''}`}
+                    onClick={() => setView('moderation')}
+                  >
+                    <span className="shell__hash">⚑</span>
+                    Moderasi
+                  </button>
+                </li>
+              ) : null}
+              {adminVisible ? (
+                <li>
+                  <button
+                    className={`shell__item${view === 'admin' ? ' shell__item--active' : ''}`}
+                    onClick={() => setView('admin')}
+                  >
+                    <span className="shell__hash">⬛</span>
+                    Admin
+                  </button>
+                </li>
+              ) : null}
             </ul>
           </div>
         ) : null}
+
 
         <div className="shell__me">
           <Avatar name={session?.user.displayName ?? '?'} size="sm" />
@@ -194,13 +408,32 @@ export function ChatShell() {
       </aside>
 
       <main className="shell__main">
-        {view === 'meetings' && activeWorkspace ? (
+        {view === 'client-portal' && activeWorkspace && isExternalUser ? (
+          <ClientPortalView key={activeWorkspace.id} />
+        ) : view === 'meetings' && activeWorkspace ? (
           <MeetingsView key={activeWorkspace.id} />
         ) : view === 'calendar' && activeWorkspace ? (
           <CalendarView key={activeWorkspace.id} />
         ) : view === 'audit' && activeWorkspace && auditVisible ? (
           <AuditView key={activeWorkspace.id} />
+        ) : view === 'requests' && activeWorkspace ? (
+          <RequestsView key={activeWorkspace.id} />
+        ) : view === 'projects' && activeWorkspace ? (
+          <ProjectsView key={activeWorkspace.id} />
+        ) : view === 'files' && activeWorkspace ? (
+          <FilesView key={activeWorkspace.id} />
+        ) : view === 'members' && activeWorkspace ? (
+          <MembersView key={activeWorkspace.id} />
+        ) : view === 'attendance' && activeWorkspace ? (
+          <AttendanceView key={activeWorkspace.id} />
+        ) : view === 'admin' && activeWorkspace && adminVisible ? (
+          <AdminView key={activeWorkspace.id} />
+        ) : view === 'orgtree' && activeWorkspace ? (
+          <OrgTreeView key={activeWorkspace.id} />
+        ) : view === 'moderation' && activeWorkspace && moderationVisible ? (
+          <ModerationQueueView key={activeWorkspace.id} />
         ) : activeChannel && activeWorkspace ? (
+
           <ChannelView key={activeChannel.id} />
         ) : (
           <div className="shell__placeholder">
@@ -242,6 +475,8 @@ export function ChatShell() {
       >
         {connection === 'online' ? '● Live' : connection === 'connecting' ? '◐ Menyambung' : '○ Offline'}
       </span>
+
+      <NotificationBell />
 
       {dialog === 'workspace' ? (
         <Modal title="Workspace baru" onClose={() => setDialog('none')}>
@@ -296,6 +531,63 @@ export function ChatShell() {
           </Button>
         </Modal>
       ) : null}
+
+      {dialog === 'search' ? (
+        <Modal title="Pencarian Global Workspace" onClose={() => setDialog('none')}>
+          <div className="shell__search-box">
+            <input
+              type="text"
+              className="shell__search-input"
+              placeholder="Cari saluran, pesan, tugas, berkas, atau anggota..."
+              value={searchQuery}
+              autoFocus
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+            <div className="shell__search-types">
+              {(['all', 'channel', 'message', 'project', 'task', 'file', 'member'] as const).map((t) => (
+                <button
+                  key={t}
+                  type="button"
+                  className={`shell__search-type-btn${searchType === t ? ' shell__search-type-btn--active' : ''}`}
+                  onClick={() => setSearchType(t)}
+                >
+                  {t}
+                </button>
+              ))}
+            </div>
+            <div className="shell__search-results">
+              {searchLoading ? (
+                <p className="shell__search-empty">Mencari…</p>
+              ) : searchResults.length > 0 ? (
+                <ul className="shell__search-list">
+                  {searchResults.map((item) => (
+                    <li
+                      key={item.id}
+                      className="shell__search-item"
+                      onClick={() => handleSelectSearchResult(item)}
+                    >
+                      <div className="shell__search-item-top">
+                        <span className={`shell__search-badge shell__search-badge--${item.type}`}>
+                          {item.type}
+                        </span>
+                        <span className="shell__search-item-title">{item.title}</span>
+                      </div>
+                      {item.snippet ? (
+                        <p className="shell__search-item-snippet">{item.snippet}</p>
+                      ) : null}
+                    </li>
+                  ))}
+                </ul>
+              ) : searchQuery.trim().length > 0 ? (
+                <p className="shell__search-empty">Tidak ada hasil untuk "{searchQuery}".</p>
+              ) : (
+                <p className="shell__search-empty">Ketik kata kunci untuk memulai pencarian di seluruh workspace.</p>
+              )}
+            </div>
+          </div>
+        </Modal>
+      ) : null}
     </div>
   );
 }
+

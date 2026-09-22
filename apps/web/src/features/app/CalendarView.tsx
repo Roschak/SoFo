@@ -10,6 +10,7 @@ import {
   formatDayLabel,
   formatDueIn,
 } from '../../lib/calendar-view';
+import { useScrollReveal } from '../../hooks/useScrollReveal';
 import { Button } from '../../components/ui/Button';
 import { Field } from '../../components/ui/Field';
 import { Modal } from '../../components/ui/Modal';
@@ -90,6 +91,14 @@ export function CalendarView() {
   const year = cursor.getFullYear();
   const monthIndex = cursor.getMonth();
   const cells = useMemo(() => buildMonthGrid(year, monthIndex, entries), [year, monthIndex, entries]);
+
+  // Scroll/entrance reveal: cells pop in as a wave; side panels slide in.
+  // Re-runs on month navigation and whenever data length changes.
+  const layoutRef = useScrollReveal<HTMLDivElement>(
+    [year, monthIndex, loading, entries.length, reminders.length],
+    { stagger: 15 },
+  );
+
   const monthEntries = useMemo(
     () =>
       entries.filter((entry) => {
@@ -166,7 +175,7 @@ export function CalendarView() {
         </p>
       ) : null}
 
-      <div className="calendar__layout">
+      <div className="calendar__layout" ref={layoutRef}>
         <section className="calendar__grid-wrap" aria-label="Kalender bulanan">
           <div className="calendar__weekdays">
             {WEEKDAYS.map((day) => (
@@ -182,6 +191,8 @@ export function CalendarView() {
                 className={`calendar__cell${cell.inMonth ? '' : ' calendar__cell--outside'}${
                   cell.key === todayKey ? ' calendar__cell--today' : ''
                 }`}
+                data-reveal
+                data-reveal-direction="scale"
               >
                 <span className="calendar__day">{cell.dayOfMonth}</span>
                 <div className="calendar__entries">
@@ -211,7 +222,12 @@ export function CalendarView() {
           <h3 className="calendar__side-title">Pengingat — 7 hari</h3>
           <ul className="calendar__reminders">
             {reminders.map((reminder) => (
-              <li key={reminder.id} className="calendar__reminder">
+              <li
+                key={reminder.id}
+                className="calendar__reminder"
+                data-reveal
+                data-reveal-direction="right"
+              >
                 <span className={`calendar__pill ${KIND_CLASS[reminder.kind]}`}>
                   {CALENDAR_KIND_LABEL[reminder.kind]}
                 </span>
@@ -231,7 +247,12 @@ export function CalendarView() {
           <h3 className="calendar__side-title">Agenda bulan ini — {monthEntries.length}</h3>
           <ul className="calendar__agenda">
             {monthEntries.slice(0, 12).map((entry) => (
-              <li key={entry.id} className="calendar__agenda-item">
+              <li
+                key={entry.id}
+                className="calendar__agenda-item"
+                data-reveal
+                data-reveal-direction="right"
+              >
                 <span className={`calendar__dot ${KIND_CLASS[entry.kind]}`} />
                 <div>
                   <p className="calendar__reminder-title">{entry.title}</p>

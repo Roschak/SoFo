@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { appendMessage, updateMessage, deleteMessage, mergePage } from './message-store';
+import {
+  appendMessage,
+  updateMessage,
+  updateMessageStatus,
+  deleteMessage,
+  mergePage,
+} from './message-store';
 import type { Message } from './types';
 
 const base: Message = {
@@ -9,6 +15,7 @@ const base: Message = {
   authorName: 'Ana',
   content: 'hello',
   replyToId: null,
+  status: 'VISIBLE',
   editedAt: null,
   createdAt: '2026-09-17T10:00:00.000Z',
   attachments: [],
@@ -36,6 +43,12 @@ describe('message store', () => {
   it('deleteMessage removes by id', () => {
     const list = deleteMessage([base], base.id);
     expect(list).toHaveLength(0);
+  });
+
+  it('updateMessageStatus applies a moderation decision by id', () => {
+    const list = updateMessageStatus([base], base.id, 'REMOVED');
+    expect(list[0]?.status).toBe('REMOVED');
+    expect(list).toHaveLength(1);
   });
 
   it('mergePage unions without duplicates and sorts chronologically', () => {

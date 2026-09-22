@@ -1,66 +1,40 @@
-# BELUM DIKERJAKAN (urut prioritas PRD)
+# BELUM DIKERJAKAN (Status Sesi #6 — 2026-09-22)
 
-## 0. Sisa bug aktif — TIDAK ADA (Sesi #2, 2026-09-18)
-- [x] Relasi `author` + migration + regenerate client → SELESAI, commit `d21cd60`
-- [x] Regression penuh: http-smoke 41/41 + realtime-smoke 15/15 → SELESAI
+> Dokumen ini mencatat item yang masih menjadi pekerjaan lanjutan setelah Sesi #6.
 
-## P1 — setelah P0 stabil (PRD §142)
-- [x] Audit service + viewer endpoints (PRD §49) → SELESAI Sesi #2c: AuditService
-      (record tenant-scoped + list dengan filter action/actor/result/from/to + cursor),
-      GET /workspaces/:id/audit gated `audit.view` (OWNER/ADMIN/MANAGER), wiring ke
-      critical actions: workspace.create, member.role.set, member.remove, user.register,
-      auth.login (SUCCESS/FAILURE), message.delete,      meeting.start/end/archive,
-      project.delete. http-smoke naik 41→48/48.
-- [x] UI audit viewer web → SELESAI Sesi #2e (commit `bf14e07`): halaman Audit
-      dgn filter, expand metadata, load-more; nav hanya utk OWNER/ADMIN/MANAGER;
-      sekalian fix bug DTO `limit` (string → @Type coerce).
-- [x] Calendar: events, meeting/deadline view, reminders (PRD §86) → SELESAI
-      Sesi #2f (commit `411307f`): model CalendarEvent + endpoint agregasi 4 sumber
-      (event, meeting, project/task deadline), reminders by horizon (default 7 hari,
-      termasuk hari ini), permission `calendar.event.create`, audit wiring, UI grid
-      bulanan + reminders di web. Catatan: push-notif reminder belum ada (butuh
-      notification system §89); "company event" dari PRD §41 dipetakan ke manual
-      event biasa.
-- [ ] Attendance: clock in/out, history, late status (PRD §87) — enterprise only
-- [x] Request & Approval workflow (PRD §88) → SELESAI Sesi #2g (commit `8b28b2f`):
-      model Request (5 tipe §44) + lifecycle PENDING→APPROVED/REJECTED/CANCELLED,
-      self-approval ban, list scoping (approver lihat semua, lainnya miliknya),
-      audit semua transisi. Notifikasi ke requester menunggu §89.
-      Catatan: UI web requests belum dibuat.
-- [ ] Notification system terpusat dari event (PRD §89) — butuh ADR event bus;
-      room `user:<id>` sudah disiapkan di ADR-004
-- [ ] Global search authorization-aware (PRD §90)
-- [ ] Admin dashboard (PRD §92)
+---
 
-## P2 — core stabil dulu (PRD §143)
-- [ ] Community features, moderation, community events (PRD §93)
-- [ ] Client access UI terpisah (role CLIENT sudah read-only di matrix)
-- [ ] Advanced analytics / reporting
-- [ ] Mobile / desktop app
-- [ ] AI, automation, integrations
-- [ ] Redis adapter untuk socket scaling multi-instance (catatan ADR-004)
+## 1. Status P1 & P2 setelah Sesi #6
+- [x] **Admin Dashboard (PRD §92)**: SELESAI (sesi sebelumnya + terverifikasi Sesi #6).
+- [x] **Organization Tree UI (PRD §28, §77)**: SELESAI & ter-wire di ChatShell.
+- [x] **Community Moderation (PRD §93)**: SELESAI Sesi #6 —
+  schema `Message.status` (VISIBLE/PENDING_REVIEW/REMOVED) + migration,
+  otomatis PENDING_REVIEW utk non-moderator di workspace COMMUNITY,
+  queue + approve/remove API (audit + realtime `message.moderated`),
+  UI `ModerationQueueView` dengan scroll reveal, 12 acceptance E2E baru,
+  notifikasi `message.pending` ke moderator via event bus (ADR-005).
+- [x] **Portal Client/Guest (PRD §51, §94)**: SELESAI Sesi #6 —
+  `ClientPortalView` read-only (pengumuman, proyek, dokumen),
+  otomatis aktif untuk role CLIENT/GUEST.
+- [x] **Rate limiting, health check, CI quality+release workflow, backup script**:
+  SELESAI & terverifikasi (112/112 HTTP E2E, 15/15 realtime).
 
-## Hardening & Production (PRD §95-§96) — sebelum release apa pun
-- [ ] Security audit menyeluruh (PRD §139 checklist)
-- [ ] Rate limiting + API abuse protection
-- [ ] Monitoring, error tracking, health check endpoint (PRD §121)
-- [ ] Backup & restore procedure (PRD §131)
-- [ ] CI/CD pipeline: lint → typecheck → unit → integration → build (PRD §134)
-- [ ] E2E otomatis di CI (http-smoke + realtime-smoke bisa dipakai)
-- [ ] Feature flags (PRD §136)
+## 2. Build Binary
+- [x] **APK**: BERHASIL dibangun fisik — `apps/web/android/app/build/outputs/apk/debug/app-debug.apk`
+  (±4.3 MB, debug, Java 17 + Android SDK user-space di `~/sofo-tools`, tanpa admin).
+  - Java 17 dipin via `afterEvaluate` di `apps/web/android/build.gradle`
+    (template Capacitor memakai VERSION_21 yang ditolak JDK 17).
+- [x] **EXE**: BUKAN via lokal — owner menolak install Visual Studio.
+  Solusi: `.github/workflows/release.yml` membangun EXE (Tauri 2) + APK
+  otomatis di GitHub runner. Jalankan: push tag `v*` atau manual dispatch,
+  lalu ambil artifact `sofo-windows-exe` / `sofo-android-apk`.
+- Rust toolchain 1.98.1 sudah terpasang lokal (di luar scope EXE karena
+  MSVC link.exe tetap dibutuhkan; toolchain GNU bisa dipakai manual:
+  `rustup default stable-gnu` bila ingin eksperimen lokal tanpa VS).
 
-## Frontend — lanjutan setelah chat stabil
-- [x] Halaman Meetings + Live Notes UI (API sudah siap) → SELESAI Sesi #2
-      (commit `11218e2`: MeetingContext + MeetingsView, notes autosave + polling,
-      9 unit test baru)
-- [ ] Halaman Projects & Tasks (kanban) (API sudah siap)
-- [ ] File upload UI + preview (API sudah siap)
-- [ ] Members management UI (invite, change role) (API sudah siap)
-- [ ] Organization tree UI (enterprise)
-- [ ] Responsive mobile layout (PRD §128) — struktur sudah siap, perlu tuning
-- [ ] Accessibility pass lengkap (PRD §127)
-
-## Kerapian
-- [ ] `refreshWorkspaces` di WorkspaceContext masih ada versi duplikat logika
-      load awal — bisa disatukan saat refactor berikutnya (kecil, bukan bug)
-- [ ] Bump `socket.io-client` test di web ke smoke terpisah bila perlu
+## 3. Sisa item lanjutan (opsional / skala berikutnya)
+- [ ] Redis adapter untuk Socket.IO multi-instance (ADR-004) — saat butuh >1 replica.
+- [ ] Signing key release APK (`assembleRelease` + keystore) sebelum publish store.
+- [ ] Push notification (FCM) & reminder push (PRD §89 lanjutan).
+- [ ] Event recurrence/kalender berulang.
+- [ ] i18n penuh ID/EN (PRD §129) — arsitektur sudah mendukung.

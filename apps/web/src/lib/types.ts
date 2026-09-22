@@ -109,6 +109,63 @@ export const CALENDAR_KIND_LABEL: Record<CalendarEntryKind, string> = {
   task_deadline: 'Deadline tugas',
 };
 
+export interface Project {
+  id: string;
+  name: string;
+  description: string | null;
+  status: string;
+  priority: string;
+  deadline: string | null;
+  ownerId: string;
+}
+
+export interface Task {
+  id: string;
+  projectId: string;
+  title: string;
+  description: string | null;
+  status: string;
+  priority: string;
+  assigneeId: string | null;
+  deadline: string | null;
+}
+
+export interface AttendanceRecord {
+  id: string;
+  userId: string;
+  userName: string | null;
+  workDate: string;
+  clockInAt: string;
+  clockOutAt: string | null;
+  status: 'ON_TIME' | 'LATE';
+  minutesLate: number;
+  workedMinutes: number | null;
+  note: string | null;
+}
+
+export type NotificationType =
+  | 'request.created'
+  | 'request.approved'
+  | 'request.rejected'
+  | 'member.invited'
+  | 'task.assigned'
+  | 'message.pending';
+
+export interface Notification {
+  id: string;
+  workspaceId: string;
+  userId: string;
+  actorId: string | null;
+  actorName: string | null;
+  type: NotificationType;
+  title: string;
+  body: string | null;
+  refType: string | null;
+  refId: string | null;
+  status: 'UNREAD' | 'READ';
+  createdAt: string;
+}
+
 export type ApiError = SofoErrorBody;
 
 export interface AuthSession {

@@ -5,6 +5,93 @@
 
 ---
 
+## Sesi #6 — 2026-09-22 — Audit E2E + P2 (Moderasi & Portal Client) + APK Fisik — SELESAI ✅
+
+### Yang sudah selesai
+- **Audit end-to-end awal**: seluruh notes dibaca, semua uncommitted diverifikasi
+  (181 unit, 100/100 HTTP, 15/15 realtime, lint/typecheck/build hijau), DB Docker
+  `sofo-db` :5433 dihidupkan, migration 8/8 applied.
+- **Community Moderation (PRD §93)**:
+  - `Message.status` enum baru (VISIBLE/PENDING_REVIEW/REMOVED) + migration
+    `20260922070221_add_message_moderation` (+FK moderatedBy, index status).
+  - Permission baru `message.moderate` + `moderation.queue.view` (MODERATOR/ADMIN/OWNER).
+  - Otomatis: pesan member biasa di workspace COMMUNITY → PENDING_REVIEW;
+    moderator/owner langsung VISIBLE; feed member hanya VISIBLE.
+  - API: `GET /moderation/queue`, `POST /messages/:id/approve|remove`
+    (audit + realtime `message.moderated` + notifikasi `message.pending` via event bus).
+  - UI `ModerationQueueView` (scroll reveal) + nav "Moderasi" (COMMUNITY + role gate).
+  - Refactor anti-duplikasi (PRD §110): `realtime.types.ts` API kini re-export
+    `@sofo/shared` (kontrak tunggal), `MessageRealtimeView` + `status` ISO-string.
+- **Portal Client/Guest (PRD §51, §94)**: `ClientPortalView` read-only
+  (pengumuman channel pertama, proyek, dokumen) — otomatis untuk role CLIENT/GUEST.
+- **APK fisik BERHASIL**: JDK 17 (Adoptium ZIP user-space) + Android SDK
+  cmdline-tools (tanpa admin) → `gradlew assembleDebug` OK (±4.3 MB).
+  Pin Java 17 via `afterEvaluate` di root `build.gradle` (Capacitor template
+  memakai VERSION_21, ditolak JDK 17). `local.properties` dibuat (jangan di-commit).
+- **EXE tanpa Visual Studio** (keputusan owner): release workflow
+  `.github/workflows/release.yml` membangun EXE (Tauri 2) + APK di GitHub runner
+  saat push tag `v*` / manual dispatch → artifact `sofo-windows-exe`/`sofo-android-apk`.
+- Rust 1.98.1 terpasang lokal (opsional; EXE lokal tetap butuh MSVC → pakai CI).
+
+### Hasil verifikasi akhir (semua hijau)
+| Check | Hasil |
+|---|---|
+| Unit tests | **197/197** (111 API + 78 web + 8 shared) |
+| HTTP E2E | **112/112** (+12 moderasi) |
+| Realtime E2E | **15/15** |
+| Typecheck + Lint (3 workspace) | **0 error** |
+| Build shared+api+web | sukses; cap sync OK |
+| APK | app-debug.apk 4.3 MB (aset terbaru) |
+
+### Keputusan owner (Sesi #6)
+- Commit name: `supabiggbang1`.
+- Tidak install Visual Studio; EXE via CI release workflow.
+
+### Peringatan
+- Rate limit auth 20 req/5 menit per IP (PRD §139) — menjalankan smoke berulang
+  cepat dapat memicu 429 pada register/login; restart server utk reset.
+- `node_modules/@capacitor/android/capacitor/build.gradle` juga dipatch ke VERSION_17
+  (root `afterEvaluate` sebenarnya sudah menimpa; patch manual cadangan).
+- UAC untuk installer elevation dibatalkan owner → semua toolchain dipasang
+  user-space (tidak butuh admin).
+
+---
+
+## Sesi #5 — 2026-09-19 — Landing Portfolio Scroll Animations, Attendance UI, Global Search & Master E2E Audit — SELESAI ✅
+
+### Yang sudah selesai
+- **Landing Page Portfolio & Animasi Scroll**:
+  - Top scroll progress indicator (`scaleX(scrollProgress)`).
+  - Background floating glowing ambient mesh dengan delay halus.
+  - Interactive Product Portfolio Showcase: multi-tab preview switcher dengan 6 live mockups (Chat, Kanban, Meeting, Calendar, Approval, Attendance).
+  - 3D perspective tilt reveal (`tilt-left`, `tilt-right`, `scale`, `up`) pada kartu produk portofolio.
+  - Aksesibilitas penuh: `prefers-reduced-motion` mematikan efek jika diminta pengguna.
+- **Attendance (Presensi Enterprise)**:
+  - Ditemukan & diperbaiki bug controller API: parameter `dto: ClockInDto` tanpa `@Body()` decorator menyebabkan `dto` undefined saat clock-in.
+  - UI `AttendanceView`: 1-tap clock in/out, status shift harian, durasi jam kerja, filter status, pencarian riwayat.
+  - Terintegrasi ke navigasi `ChatShell` untuk workspace ENTERPRISE.
+  - 6 unit test baru untuk `attendance-view.ts`.
+- **Global Search (PRD §48, §90)**:
+  - Modul baru di backend `SearchModule`: `GET /workspaces/:workspaceId/search?q=...&type=...`.
+  - Authorization-aware filtering antar channel, message, project, task, file, dan member.
+  - UI command palette / global search modal di `ChatShell` dengan filter chips dan hotkey `Ctrl+K`.
+  - 3 unit test baru di `search.service.spec.ts`.
+- **Packaging Web / APK / EXE**:
+  - Web production build bersih di `apps/web/dist` via Vite.
+  - Capacitor Android assets disinkronisasi ke `android/app/src/main/assets/public`.
+  - Tauri 2 config terverifikasi untuk build executable Windows.
+
+### Hasil Audit End-to-End
+- **Unit Tests**: 153/153 PASS (86 API + 59 web + 8 shared).
+- **HTTP Smoke Tests**: 94/94 PASS (100% acceptance, 0 failures).
+- **Realtime WebSocket Smoke**: 15/15 PASS (100% acceptance, 0 failures).
+- **TypeScript Typecheck**: 0 errors di seluruh 3 workspaces.
+- **ESLint**: 0 errors, 0 warnings di seluruh 3 workspaces.
+- **Production Build**: Sukses 100%.
+
+---
+
+
 ## Sesi #2 — 2026-09-18 — RESUME: fix blocker `authorName` — SELESAI ✅
 
 ### Yang sudah selesai
@@ -104,6 +191,78 @@
 - Verifikasi: http-smoke **69/69** (+13), API unit **61/61** (+12), realtime 15/15,
   lint/typecheck/build hijau.
 - Commit: `8b28b2f`
+
+---
+
+## Sesi #4 — 2026-09-19 — Frontend P1 + Landing animasi scroll + APK/EXE — SELESAI ✅
+
+### Yang sudah selesai
+- Landing page portofolio produk dengan **animasi scroll** di setiap section
+  (permintaan eksplisit owner): IntersectionObserver via `lib/scroll-reveal.ts`,
+  dipakai juga di view baru (kanban/kartureveal). Aman `prefers-reduced-motion`.
+- 4 view web baru: Requests, Projects (kanban drag-drop), Files, Members —
+  semuanya wired ke ChatShell dengan guard per-peran.
+- API baru: file list + file delete endpoint, user lookup by email,
+  relasi `File.uploader` (+migration). Semua tenant-scoped & permission-gated.
+- Packaging: Capacitor (APK) + Tauri 2 (EXE) — config + panduan di
+  `docs/notes/04-BUILD-APK-EXE.md` (build butuh Android Studio / Rust toolchain,
+  belum dijalankan di mesin ini).
+
+### Bug yang ditemukan & diperbaiki saat verifikasi live
+1. `DELETE /workspaces/:id/files/:fileId` belum ada di controller padahal UI
+   memakainya → 404. Service `softDelete` sudah benar; endpoint ditambahkan.
+2. Spec file.service awalnya ditulis gaya Vitest padahal API pakai Jest →
+   diganti `import from '@jest/globals'`.
+3. Import `./request.service` salah di `lib/request-view.ts` (tipe API dipakai
+   lintas batas) → diganti interface lokal.
+
+### Hasil verifikasi (semua hijau)
+- http-smoke **80/80**, realtime-smoke **15/15**
+- unit: API **70/70** (+2 file), shared 8/8, web **50/50** (+22)
+- lint 0, typecheck 0, build sukses
+- Probe live tambahan: upload→list→download→delete file, lookup email 200/404.
+- **Tambahan (permintaan owner)**: scroll-reveal dipasang juga di view existing —
+  Calendar (sel `scale`, reminder/agenda `right`, re-run saat ganti bulan),
+  Audit (baris `up`, termasuk hasil 'load more'), Meetings (kartu `up`,
+  catatan `right`, re-run saat buka meeting). Lint/typecheck/test 50/50/build
+  diverifikasi ulang — tetap hijau.
+
+### Yang BELUM selesai (lanjutkan di sini)
+- Attendance, global search, admin dashboard (P1 API).
+- Build fisik APK/EXE (butuh toolchain; lihat doc build).
+- Org tree UI, a11y pass, responsive tuning.
+
+---
+
+## Sesi #3 — 2026-09-19 — Notification system (PRD §46/§47/§89, ADR-005) — SELESAI ✅
+
+### Kondisi saat mulai
+- Pekerjaan setengah jadi ditemukan di working tree (belum di-commit): API
+  notification, event bus, migration, bell UI — semua TANPA verifikasi.
+
+### Yang dikerjakan
+- **3 bug ditemukan & diperbaiki:**
+  1. `EventBusModule` `wildcard: false` → `true` (wajib untuk @OnEvent pola).
+  2. **Akar masalah utama:** pola `@OnEvent('notification.%')` TIDAK pernah match
+     event multi-segmen — `%` dan `*` eventemitter2 hanya match TEPAT SATU
+     segmen. Fix: `notification.**`. Gejala licik: listener terdaftar, wildcard
+     aktif, TAPI `emit()` return false & handler tak jalan.
+  3. `decisionNote ?? null ?? undefined` → `?? undefined` (no-op typo).
+- Perbaiki perhitungan `dueInDays` reminders (calendar-date diff, bukan ms-ceil).
+- Tambah 11 acceptance E2E notification (§6e http-smoke): inbox per-user,
+  actor filter, unread-count, mark read owner-only, read-all, 401.
+- Update PROGRESS.md + 03-BELUM-DIKERJAKAN.md (calendar/request status yang
+  tertinggal dari sesi lama juga diluruskan).
+
+### Hasil verifikasi (semua hijau)
+- http-smoke **80/80**, realtime-smoke **15/15**, unit 68+8+28 = **104/104**
+- lint 0, typecheck 0, build sukses (shared+api+web)
+
+### Peringatan
+- POST tanpa @HttpCode = **201** (bukan 200) — smoke assertion pakai 200/201.
+- `prisma generate` gagal EPERM kalau API server masih jalan (Windows).
+- Verifikasi notification WAJIB lewat dist build baru — server dari dist lama
+  diam-diam memakai kode lama (penyebab kebingungan awal).
 
 ---
 

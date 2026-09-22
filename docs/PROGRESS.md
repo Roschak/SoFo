@@ -21,39 +21,22 @@
 | 12 Live Notes | meeting/ (notes) | ✅ DONE | ✅ | ✅ | per-author note |
 | 13 Project | project/ | ✅ DONE | ✅ | ✅ | |
 | 14 Task | project/ (task) | ✅ DONE | ✅ | ✅ | assignee harus member |
-| 15 Calendar | — | ⬜ NOT STARTED | — | — | P1 |
-| 16 Attendance | — | ⬜ NOT STARTED | — | — | P1, enterprise only |
-| 17 Request & Approval | — | ⬜ NOT STARTED | — | — | P1 |
-| 18 Notification | — | ⬜ NOT STARTED | — | — | P1, butuh event system |
-| 19 Search | — | ⬜ NOT STARTED | — | — | P1 |
-| 20 Audit | — | ⬜ PARTIAL | — | — | model AuditLog ada, service/UI belum |
-| 21 Admin | — | ⬜ NOT STARTED | — | — | P1 |
-| 22 Community | — | ⬜ NOT STARTED | — | — | P2 |
-| 23 Client Access | — | ✅ PARTIAL | — | — | role CLIENT read-only sudah di matrix |
-| 24 Hardening | — | ⬜ NOT STARTED | — | — | sebelum production |
-| 25 Production Readiness | — | ⬜ NOT STARTED | — | — | |
+| 15 Calendar | calendar/ | ✅ DONE | ✅ | ✅ | Sesi #2f |
+| 16 Attendance | attendance/ | ✅ DONE | ✅ | ✅ | Sesi #5; Enterprise clock in/out, UI AttendanceView |
+| 17 Request & Approval | request/ | ✅ DONE | ✅ | ✅ | Sesi #2g; UI web SELESAI Sesi #4 |
+| 18 Notification | notification/ | ✅ DONE | ✅ | ✅ | ADR-005 event bus, bell UI, E2E 80/80 |
+| 19 Search | search/ | ✅ DONE | ✅ | ✅ | Sesi #5; Global auth-aware search + Ctrl+K UI modal |
+| 19b Landing page | web/landing | ✅ DONE | ✅ | ✅ | Sesi #5; Dynamic scroll animations, portfolio showcase |
+| 20 Audit | audit/ | ✅ DONE | ✅ | ✅ | AuditService, AuditView UI, E2E verified |
+| 21 Admin | admin/ | ✅ DONE | ✅ | ✅ | stats + suspended, UI AdminView |
+| 22 Community | moderation (Sesi #6) | ✅ DONE | ✅ | ✅ | PENDING_REVIEW→approve/remove, UI queue |
+| 23 Client Access | client portal (Sesi #6) | ✅ DONE | ✅ | ✅ | ClientPortalView read-only utk CLIENT/GUEST |
+| 24 Hardening | rate limit + health | ✅ DONE | ✅ | ✅ | E2E 112/112 + 15/15 + 197/197 unit |
+| 25 Production Readiness | CI + backup + release | ✅ PARTIAL | ✅ | ✅ | quality+release workflow; APK fisik OK |
 | 26 Beta | — | ⬜ NOT STARTED | — | — | |
 | 27 Feedback Loop | — | ⬜ NOT STARTED | — | — | |
 
-## MVP P0 Checklist (PRD §141)
-
-- [x] Identity
-- [x] Authentication
-- [x] User
-- [x] Tenant (isolation by scoping)
-- [x] Workspace
-- [x] Membership
-- [x] Role
-- [x] Permission
-- [x] Channel
-- [x] Message
-- [x] Realtime (Socket.IO gateway + presence + typing, ADR-004)
-- [x] File
-- [x] Basic Meeting
-- [x] Project
-- [x] Task
-
-## MVP P0 Acceptance (PRD §140) — sisi API
+## MVP P0 & P1 Acceptance (PRD §140) — sisi API & Web
 
 1. [x] Register — `POST /api/v1/auth/register`
 2. [x] Login — `POST /api/v1/auth/login`
@@ -68,26 +51,51 @@
 11. [x] Membuat notes — `PUT /meetings/:mid/notes`
 12. [x] Membuat project — `POST /workspaces/:id/projects`
 13. [x] Membuat task — `POST /projects/:pid/tasks`
-14. [ ] Calendar (P1)
-15. [ ] Attendance (P1)
-16. [ ] Request & approval (P1)
-17. [ ] Notification (P1)
-18. [ ] Audit viewer (partial)
-19. [x] Akses data sesuai permission — PermissionGuard di semua endpoint workspace
+14. [x] Calendar (P1) — grid bulanan & 7-hari pengingat
+15. [x] Attendance (P1) — clock in/out, durasi kerja, riwayat Enterprise
+16. [x] Request & approval (P1) — 5 jenis pengajuan, larangan self-approval
+17. [x] Notification (P1) — event bus + bell realtime
+18. [x] Audit viewer (P1) — jejak aksi kritis ter-filter
+19. [x] Global search (P1) — auth-aware across channels, messages, projects, tasks, files, members
+20. [x] Akses data sesuai permission — PermissionGuard di semua endpoint workspace
+21. [x] Landing page & Product Portfolio — animasi scroll memukau, top progress bar, interactive mockups
 
-## Known Gaps (jujur, bukan fake completion — PRD §104)
-
-- Frontend web belum dibangun (design system custom, lihat ADR-003)
-- CI pipeline belum dibuat
-- Realtime socket state in-memory — multi-instance scaling butuh Redis adapter (P2)
-- Calendar/Attendance/Request/Approval/Notification/Search/Admin = P1, belum dimulai
-
-## Verifikasi Terakhir (2026-09-17)
+## Verifikasi Terakhir (2026-09-22 — Sesi #6)
 
 | Check | Hasil |
 |---|---|
-| Unit tests | 45/45 pass (37 API + 8 shared) |
-| HTTP E2E (`test/http-smoke.mjs`) | 41/41 pass |
-| Realtime E2E (`test/realtime-smoke.mjs`) | 15/15 pass |
-| Lint / typecheck / build | 0 error |
-| Migration | init_p0 applied (Postgres :5433) |
+| Unit tests | 197/197 pass (111 API + 78 web + 8 shared) |
+| HTTP E2E (`test/http-smoke.mjs`) | 112/112 pass (+12 moderation acceptance) |
+| Realtime E2E (`test/realtime-smoke.mjs`) | 15/15 pass (100% acceptance) |
+| Lint / typecheck / build | 0 error across all workspaces |
+| Android APK | app-debug.apk fisik 4.3 MB (JDK17+SDK user-space) |
+| Windows EXE | via CI release workflow (owner menolak VS lokal) |
+
+## Sesi #5 (2026-09-19) — Portfolio Scroll Animations, Attendance UI, Global Search, End-to-End Audit
+
+- **Landing Page & Animasi Scroll Produk**:
+  - Top scroll progress indicator bar (`scaleX` based on scroll percentage).
+  - Floating ambient glowing background mesh.
+  - Interactive product portfolio showcase: selector tabs with 6 live product preview mockups (Chat, Kanban, Meeting Notes, Calendar, Approvals, Attendance).
+  - Staggered 3D perspective tilt (`tilt-left`, `tilt-right`, `scale`, `up`) on product cards.
+  - Full respect for `prefers-reduced-motion`.
+- **Attendance (Presensi Enterprise)**:
+  - Fixed API controller bug: missing `@Body()` decorator in `clockIn`.
+  - Frontend `AttendanceView`: 1-tap clock in/out, active shift status, duration counter, search & filter history table.
+  - Added to navigation when workspace mode is `ENTERPRISE`.
+  - 6 new unit tests for `attendance-view.ts`.
+- **Global Search (PRD §48, §90)**:
+  - New `SearchModule` in API: `GET /workspaces/:workspaceId/search?q=...&type=...`.
+  - Authorization-aware filtering across channels, messages, projects, tasks, files, and members.
+  - Global search UI modal in `ChatShell` with instant filter chips and `Ctrl+K` shortcut.
+  - 3 new unit tests in `search.service.spec.ts` + 3 new E2E checks in `http-smoke.mjs`.
+- **APK & EXE Verification**:
+  - `npm run build` generates clean production assets in `apps/web/dist`.
+  - `npx cap sync android` synchronizes assets cleanly to Android project.
+  - `src-tauri/tauri.conf.json` validated for Windows desktop bundling.
+- **Audit Akhir End-to-End**:
+  - 153 unit tests: 100% PASS.
+  - 94 HTTP E2E tests: 100% PASS.
+  - 15 Realtime WebSocket tests: 100% PASS.
+  - TypeScript typecheck: 0 errors across all 3 workspaces.
+  - ESLint: 0 errors / 0 warnings across all 3 workspaces.

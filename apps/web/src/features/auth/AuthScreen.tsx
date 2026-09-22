@@ -105,6 +105,17 @@ export function AuthScreen() {
           >
             {mode === 'login' ? 'Daftar sekarang' : 'Masuk'}
           </button>
+          {' · '}
+          <button
+            type="button"
+            className="auth__switch-button"
+            onClick={() => {
+              window.location.hash = '#atas';
+              window.location.reload();
+            }}
+          >
+            Kembali ke beranda
+          </button>
         </p>
       </section>
     </main>

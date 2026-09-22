@@ -4,6 +4,7 @@ import {
   Catch,
   HttpStatus,
   HttpException,
+  Logger,
 } from '@nestjs/common';
 import type { Response } from 'express';
 import { SofoError, type SofoErrorBody, type SofoErrorCode } from '@sofo/shared';
@@ -29,6 +30,8 @@ const CODE_BY_STATUS: Record<number, SofoErrorCode> = {
 
 @Catch()
 export class SofoExceptionFilter implements ExceptionFilter {
+  private readonly logger = new Logger(SofoExceptionFilter.name);
+
   catch(exception: unknown, host: ArgumentsHost): void {
     const response = host.switchToHttp().getResponse<Response>();
 
@@ -51,7 +54,11 @@ export class SofoExceptionFilter implements ExceptionFilter {
               message: typeof payload === 'string' ? payload : exception.message,
             };
     } else {
-      // Never leak stack traces or internals (PRD §56).
+      // Never leak stack traces or internals (PRD §56) — but log server-side
+      // so 500s are diagnosable (was: silent swallow, un-debuggable).
+      this.logger.error(
+        `Unhandled error: ${exception instanceof Error ? exception.stack : String(exception)}`,
+      );
       body = { code: 'INTERNAL_ERROR', message: 'An unexpected error occurred' };
       status = HttpStatus.INTERNAL_SERVER_ERROR;
     }

@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { getSocketServer } from '../../infrastructure/realtime/socket-server';
+import type { MessageModerationEvent } from '@sofo/shared';
 import {
   MessageDeletedEvent,
   MessageRealtimeView,
@@ -23,6 +24,10 @@ export class RealtimeBroadcaster {
 
   broadcastMessageDeleted(workspaceId: string, event: MessageDeletedEvent): void {
     this.emit(workspaceId, 'message.deleted', event);
+  }
+
+  broadcastMessageModerated(workspaceId: string, event: MessageModerationEvent): void {
+    this.emit(workspaceId, 'message.moderated', event);
   }
 
   private emit(workspaceId: string, event: string, payload: unknown): void {

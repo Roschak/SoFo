@@ -4,10 +4,13 @@
  */
 :root {
   /* ── Color: brand ─────────────────────────────── */
+  --sofo-accent-950: #14142e;
   --sofo-accent-900: #1e1b4b;
   --sofo-accent-700: #4338ca;
   --sofo-accent-600: #4f46e5;
   --sofo-accent-500: #6366f1;
+  --sofo-accent-400: #818cf8;
+  --sofo-accent-300: #a5b4fc;
   --sofo-accent-200: #c7d2fe;
   --sofo-accent-100: #e0e7ff;
 
@@ -19,7 +22,9 @@
   --sofo-ink-700: #2a2f3b;
   --sofo-ink-600: #3a4150;
   --sofo-text-100: #f3f5f9;
+  --sofo-text-200: #d9dee8;
   --sofo-text-300: #c4cad6;
+  --sofo-text-400: #a3abb9;
   --sofo-text-500: #8b93a3;
   --sofo-text-600: #6b7382;
 
@@ -52,6 +57,7 @@
   --sofo-r-sm: 6px;
   --sofo-r-md: 10px;
   --sofo-r-lg: 14px;
+  --sofo-r-xl: 20px;
   --sofo-r-full: 9999px;
 
   /* ── Elevation ────────────────────────────────── */

@@ -11,6 +11,7 @@ import {
   roleCanManageMeetings,
   sortMeetings,
 } from '../../lib/meeting-view';
+import { useScrollReveal } from '../../hooks/useScrollReveal';
 import { MEETING_STATUS_LABEL } from '../../lib/types';
 import type { Meeting } from '../../lib/types';
 import './MeetingsView.css';
@@ -145,6 +146,13 @@ export function MeetingsView() {
 
   const sorted = sortMeetings(meetings);
 
+  // Scroll reveal: meeting cards slide up in a wave; notes panel items fade in.
+  // Re-runs when the list grows or the opened meeting changes.
+  const listRef = useScrollReveal<HTMLDivElement>(
+    [sorted.length, activeMeeting?.id],
+    { stagger: 40 },
+  );
+
   return (
     <div className="meetings">
       <header className="meetings__header">
@@ -163,7 +171,7 @@ export function MeetingsView() {
         </p>
       ) : null}
 
-      <div className="meetings__layout">
+      <div className="meetings__layout" ref={listRef}>
         <section className="meetings__list" aria-label="Daftar meeting">
           {loadingMeetings && meetings.length === 0 ? (
             <p className="meetings__empty">Memuat meetings…</p>
@@ -181,6 +189,8 @@ export function MeetingsView() {
               <article
                 key={meeting.id}
                 className={`meetings__card${activeMeeting?.id === meeting.id ? ' meetings__card--open' : ''}`}
+                data-reveal
+                data-reveal-direction="up"
               >
                 <button
                   className="meetings__card-main"
@@ -262,7 +272,12 @@ export function MeetingsView() {
               )}
               <ul className="meetings__notes-list">
                 {notes.map((note) => (
-                  <li key={note.id} className="meetings__note">
+                  <li
+                    key={note.id}
+                    className="meetings__note"
+                    data-reveal
+                    data-reveal-direction="right"
+                  >
                     <Avatar name={memberName(note.authorId)} size="sm" />
                     <div>
                       <p className="meetings__note-author">

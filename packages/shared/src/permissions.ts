@@ -52,6 +52,12 @@ export const SOFO_PERMISSIONS = [
   'audit.view',
   // calendar (PRD §41, §86)
   'calendar.event.create',
+  // attendance (PRD §42, §87) — Enterprise Mode only
+  'attendance.clock',
+  'attendance.view',
+  // community moderation (PRD §93)
+  'message.moderate',
+  'moderation.queue.view',
 ] as const;
 
 export type SofoPermission = (typeof SOFO_PERMISSIONS)[number];
@@ -109,6 +115,8 @@ export const DEFAULT_ROLE_PERMISSIONS: Readonly<Record<SofoRole, readonly SofoPe
     'request.approve',
     'audit.view',
     'calendar.event.create',
+    'attendance.clock',
+    'attendance.view',
   ],
   STAFF: [
     'workspace.view',
@@ -124,6 +132,8 @@ export const DEFAULT_ROLE_PERMISSIONS: Readonly<Record<SofoRole, readonly SofoPe
     'task.create',
     'task.update',
     'request.create',
+    'attendance.clock',
+    'attendance.view',
   ],
   MEMBER: [
     'workspace.view',
@@ -137,6 +147,8 @@ export const DEFAULT_ROLE_PERMISSIONS: Readonly<Record<SofoRole, readonly SofoPe
     'task.view',
     'task.update',
     'request.create',
+    'attendance.clock',
+    'attendance.view',
   ],
   MODERATOR: [
     'workspace.view',
@@ -149,6 +161,8 @@ export const DEFAULT_ROLE_PERMISSIONS: Readonly<Record<SofoRole, readonly SofoPe
     'message.send',
     'message.edit',
     'message.delete',
+    'message.moderate',
+    'moderation.queue.view',
     'file.download',
     'meeting.join',
   ],

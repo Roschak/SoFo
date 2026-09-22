@@ -8,6 +8,7 @@ import {
   appendAuditPage,
   formatAuditTime,
 } from '../../lib/audit-view';
+import { useScrollReveal } from '../../hooks/useScrollReveal';
 import { Button } from '../../components/ui/Button';
 import type { AuditLogPage, AuditLogView } from '../../lib/types';
 import './AuditView.css';
@@ -100,6 +101,10 @@ export function AuditView() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeWorkspace?.id, action, result]);
 
+  // Scroll reveal: rows fade in as a staggered wave; re-runs when the list grows
+  // (including 'load more') so appended rows animate too.
+  const tableRef = useScrollReveal<HTMLDivElement>([logs.length, loading], { stagger: 12 });
+
   if (!canViewAudit(myRole)) {
     return (
       <div className="audit">
@@ -164,7 +169,7 @@ export function AuditView() {
         </p>
       ) : null}
 
-      <div className="audit__table" role="table" aria-label="Daftar audit log">
+      <div className="audit__table" role="table" aria-label="Daftar audit log" ref={tableRef}>
         <div className="audit__row audit__row--head" role="row">
           <span role="columnheader">Waktu</span>
           <span role="columnheader">Aktor</span>
@@ -183,7 +188,12 @@ export function AuditView() {
         {logs.map((entry) => {
           const expanded = expandedId === entry.id;
           return (
-            <div key={entry.id} className="audit__row-wrap">
+            <div
+              key={entry.id}
+              className="audit__row-wrap"
+              data-reveal
+              data-reveal-direction="up"
+            >
               <button
                 className={`audit__row${entry.result === 'FAILURE' ? ' audit__row--failure' : ''}`}
                 role="row"

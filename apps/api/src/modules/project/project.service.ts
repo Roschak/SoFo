@@ -1,8 +1,10 @@
 import { Injectable } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { PrismaService } from '../../infrastructure/prisma/prisma.service';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { AuditService } from '../audit/audit.service';
 import { forbidden, notFound } from '@sofo/shared';
+import type { NotificationEventPayload } from '@sofo/shared';
 
 /**
  * Project & Task domain (PRD §38-§40).
@@ -14,6 +16,7 @@ export class ProjectService {
     private readonly prisma: PrismaService,
     private readonly authorizationService: AuthorizationService,
     private readonly auditService: AuditService,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   async createProject(
@@ -136,6 +139,20 @@ export class ProjectService {
         assigneeId: input.assigneeId,
       },
     });
+
+    if (input.assigneeId) {
+      // ADR-005: PRD §46 TaskAssigned.
+      this.eventEmitter.emit('notification.task.assigned', {
+        workspaceId,
+        actorId,
+        recipientIds: [input.assigneeId],
+        type: 'task.assigned',
+        title: `Tugas baru untukmu: ${task.title}`,
+        refType: 'task',
+        refId: task.id,
+      } satisfies NotificationEventPayload);
+    }
+
     return this.toTaskView(task);
   }
 

@@ -14,6 +14,7 @@ describe('realtime vs history convergence', () => {
     authorName: 'Ana',
     content: `content-${id}`,
     replyToId: null,
+    status: 'VISIBLE',
     editedAt: null,
     createdAt,
     attachments: [],
