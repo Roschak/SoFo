@@ -15,5 +15,8 @@ apps/web/android/.gradle/
 apps/web/android/app/build/
 apps/web/android/build/
 apps/web/android/local.properties
+apps/web/android/keystore.properties
+*.jks
+*.keystore
 apps/web/src-tauri/target/
 apps/web/src-tauri/gen/schemas/

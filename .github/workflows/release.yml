@@ -48,7 +48,7 @@ jobs:
           retention-days: 14
 
   apk:
-    name: Android APK (Capacitor)
+    name: Android APK (signed release)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -77,13 +77,40 @@ jobs:
         working-directory: apps/web
         run: npx cap sync android
 
-      - name: Build debug APK
-        working-directory: apps/web/android
-        run: ./gradlew assembleDebug --no-daemon
+      - name: Restore signing keystore from secrets
+        env:
+          ANDROID_KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_B64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          if [ -z "$ANDROID_KEYSTORE_B64" ]; then
+            echo '::warning::ANDROID_KEYSTORE_B64 not set — building unsigned release APK'
+            exit 0
+          fi
+          echo "$ANDROID_KEYSTORE_B64" | base64 -d > /tmp/sofo-release.jks
+          cat > apps/web/android/keystore.properties <<EOF
+          storeFile=/tmp/sofo-release.jks
+          storePassword=$ANDROID_KEYSTORE_PASSWORD
+          keyAlias=$ANDROID_KEY_ALIAS
+          keyPassword=$ANDROID_KEY_PASSWORD
+          EOF
 
-      - name: Upload APK artifact
+      - name: Build release APK (signed when keystore present)
+        working-directory: apps/web/android
+        run: ./gradlew assembleRelease assembleDebug --no-daemon
+
+      - name: Upload release APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: sofo-android-apk
+          name: sofo-android-apk-release
+          path: apps/web/android/app/build/outputs/apk/release/app-release.apk
+          retention-days: 14
+
+      - name: Upload debug APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sofo-android-apk-debug
           path: apps/web/android/app/build/outputs/apk/debug/app-debug.apk
           retention-days: 14
+          if-no-files-found: ignore
