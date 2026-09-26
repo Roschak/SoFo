@@ -27,6 +27,7 @@ import { NotificationModule } from './modules/notification/notification.module';
 import { AttendanceModule } from './modules/attendance/attendance.module';
 import { SearchModule } from './modules/search/search.module';
 import { AdminModule } from './modules/admin/admin.module';
+import { FeedbackModule } from './modules/feedback/feedback.module';
 
 @Module({
   imports: [
@@ -50,6 +51,7 @@ import { AdminModule } from './modules/admin/admin.module';
     AttendanceModule,
     SearchModule,
     AdminModule,
+    FeedbackModule,
     HealthModule,
   ],
   providers: [{ provide: APP_FILTER, useClass: SofoExceptionFilter }],

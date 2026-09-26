@@ -225,6 +225,46 @@
   gap: var(--sofo-sp-4);
 }
 
+/* Recurrence selector (PRD §86 lanjutan) */
+.calendar__recurrence {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sofo-sp-2);
+}
+
+.calendar__recurrence-label {
+  font-size: var(--sofo-fs-xs);
+  color: var(--sofo-text-500);
+}
+
+.calendar__recurrence-options {
+  display: flex;
+  gap: var(--sofo-sp-2);
+}
+
+.calendar__recurrence-option {
+  flex: 1;
+  padding: var(--sofo-sp-2) var(--sofo-sp-3);
+  border: 1px solid var(--sofo-ink-700);
+  border-radius: var(--sofo-r-md);
+  background: transparent;
+  color: var(--sofo-text-500);
+  font-size: var(--sofo-fs-sm);
+  cursor: pointer;
+  transition: border-color 120ms ease, color 120ms ease, background 120ms ease;
+}
+
+.calendar__recurrence-option--active {
+  border-color: var(--sofo-accent-500);
+  color: var(--sofo-accent-500);
+  background: color-mix(in srgb, var(--sofo-accent-500) 8%, transparent);
+}
+
+.calendar__recurrence-hint {
+  font-size: var(--sofo-fs-xs);
+  color: var(--sofo-text-500);
+}
+
 @media (max-width: 1000px) {
   .calendar__layout {
     grid-template-columns: 1fr;

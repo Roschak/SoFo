@@ -368,13 +368,20 @@ async function main() {
 
   console.log('\n=== 6c. CALENDAR (PRD §41, §86) ===');
   const eventTitle = `Review QA ${unique}`;
+  // Tanggal dinamis (besok 09:00–11:00 UTC) supaya reminders horizon selalu berisi.
+  const isoDay = (offsetDays, hour) => {
+    const d = new Date();
+    d.setUTCDate(d.getUTCDate() + offsetDays);
+    d.setUTCHours(hour, 0, 0, 0);
+    return d.toISOString();
+  };
   const calCreate = await call('POST', `/workspaces/${workspaceId}/calendar/events`, {
     token: ownerToken,
     workspaceId,
     body: {
       title: eventTitle,
-      startAt: '2026-09-25T09:00:00.000Z',
-      endAt: '2026-09-25T11:00:00.000Z',
+      startAt: isoDay(1, 9),
+      endAt: isoDay(1, 11),
     },
   });
   check('owner create calendar event 201', calCreate.status === 201, JSON.stringify(calCreate.data));
@@ -902,6 +909,103 @@ async function main() {
   });
   check('audit mencatat message.remove', modAudit.status === 200 && modAudit.data.items.length > 0);
 
+  console.log('\n=== 6i0. CALENDAR RECURRENCE (PRD §86 lanjutan) ===');
+  // Tanggal dinamis: 5 hari ke depan pukul 09:00 UTC, berakhir 8 hari ke depan —
+  // aman dari drift waktu (check reminders lama gagal karena tanggal hardcoded lewat).
+  // isoDay didefinisikan di bagian 6c (kalender).
+  const recStart = isoDay(5, 9);
+  const recCreate = await call('POST', `/workspaces/${workspaceId}/calendar/events`, {
+    token: ownerToken,
+    workspaceId,
+    body: {
+      title: 'Daily sync berulang',
+      startAt: recStart,
+      endAt: isoDay(5, 10),
+      recurrence: 'DAILY',
+      recurrenceUntil: isoDay(8, 9),
+    },
+  });
+  check(
+    'create event berulang 201 + recurrence tersimpan',
+    recCreate.status === 201 && recCreate.data.recurrence === 'DAILY',
+    JSON.stringify(recCreate.data),
+  );
+
+  const recBad = await call('POST', `/workspaces/${workspaceId}/calendar/events`, {
+    token: ownerToken,
+    workspaceId,
+    body: {
+      title: 'Tanpa batas',
+      startAt: recStart,
+      endAt: '2026-10-05T10:00:00.000Z',
+      recurrence: 'DAILY',
+    },
+  });
+  check('recurrence tanpa recurrenceUntil 409', recBad.status === 409);
+
+  const recKindBad = await call('POST', `/workspaces/${workspaceId}/calendar/events`, {
+    token: ownerToken,
+    workspaceId,
+    body: {
+      title: 'Kind ngawur',
+      startAt: recStart,
+      endAt: isoDay(5, 10),
+      recurrence: 'MONTHLY',
+      recurrenceUntil: isoDay(60, 9),
+    },
+  });
+  // DTO @IsIn menolak sebelum service → VALIDATION_ERROR 400.
+  check('recurrence kind tidak dikenal 400 VALIDATION_ERROR', recKindBad.status === 400);
+
+  const recCalendar = await call(
+    'GET',
+    `/workspaces/${workspaceId}/calendar?from=2026-10-01T00:00:00.000Z&to=2026-10-31T23:59:59.000Z`,
+    { token: staffToken, workspaceId },
+  );
+  const recOccurrences = (recCalendar.data?.items ?? []).filter(
+    (item) => item.refId === recCreate.data.id,
+  );
+  check(
+    'event DAILY 4 hari ter-expand jadi 4 occurence',
+    recCalendar.status === 200 && recOccurrences.length === 4,
+    JSON.stringify(recOccurrences.map((item) => item.startAt)),
+  );
+  check(
+    'occurence id stabil & unik (#0..#3)',
+    new Set(recOccurrences.map((item) => item.id)).size === 4 &&
+      recOccurrences.every((item) => item.occurrenceIndex !== null),
+  );
+
+  const recStaff = await call('POST', `/workspaces/${workspaceId}/calendar/events`, {
+    token: staffToken,
+    workspaceId,
+    body: {
+      title: 'Staff berulang',
+      startAt: recStart,
+      endAt: '2026-10-05T10:00:00.000Z',
+      recurrence: 'WEEKLY',
+      recurrenceUntil: '2026-11-08T09:00:00.000Z',
+    },
+  });
+  check('staff create event berulang 403 (tetap gated)', recStaff.status === 403);
+
+  const recDelete = await call('DELETE', `/workspaces/${workspaceId}/calendar/events/${recCreate.data.id}`, {
+    token: ownerToken,
+    workspaceId,
+  });
+  check('owner delete event berulang 200', recDelete.status === 200);
+
+  const recAfterDelete = await call(
+    'GET',
+    `/workspaces/${workspaceId}/calendar?from=2026-10-01T00:00:00.000Z&to=2026-10-31T23:59:59.000Z`,
+    { token: staffToken, workspaceId },
+  );
+  check(
+    'occurence hilang setelah series dihapus',
+    recAfterDelete.status === 200 &&
+      (recAfterDelete.data?.items ?? []).every((item) => item.refId !== recCreate.data.id),
+  );
+
   console.log('\n=== 6i. HEALTH CHECK (PRD §121) ===');
   const health = await call('GET', '/health');
   check(
@@ -918,6 +1022,119 @@ async function main() {
   check(
     'health endpoint tanpa rate limit (public probe)',
     rateLimitProbe.status === 200,
+  );
+
+  console.log('\n=== 6k. FEEDBACK LOOP (PRD §98, Phase 27) ===');
+  const fbCreate = await call('POST', `/workspaces/${workspaceId}/feedback`, {
+    token: staffToken,
+    workspaceId,
+    body: { type: 'BUG', message: 'Tombol clock-in kadang double submit' },
+  });
+  check(
+    'member kirim feedback 201 + status OPEN',
+    fbCreate.status === 201 && fbCreate.data.status === 'OPEN',
+    JSON.stringify(fbCreate.data),
+  );
+  const feedbackId = fbCreate.data.id;
+
+  const fbSelfVote = await call('POST', `/workspaces/${workspaceId}/feedback/${feedbackId}/vote`, {
+    token: staffToken,
+    workspaceId,
+  });
+  check('requester vote feedback sendiri 201 (count 1)', fbSelfVote.status === 201 && fbSelfVote.data.voteCount === 1, JSON.stringify(fbSelfVote.data));
+
+  const fbOwnerVote = await call('POST', `/workspaces/${workspaceId}/feedback/${feedbackId}/vote`, {
+    token: ownerToken,
+    workspaceId,
+  });
+  check('owner vote feedback 201 (count 2)', fbOwnerVote.status === 201 && fbOwnerVote.data.voteCount === 2);
+
+  const fbOwnerVoteAgain = await call('POST', `/workspaces/${workspaceId}/feedback/${feedbackId}/vote`, {
+    token: ownerToken,
+    workspaceId,
+  });
+  check('vote ulang idempotent 409 CONFLICT', fbOwnerVoteAgain.status === 409);
+
+  const fbList = await call('GET', `/workspaces/${workspaceId}/feedback`, {
+    token: ownerToken,
+    workspaceId,
+  });
+  check(
+    'list feedback 200 + voterNames ter-resolve',
+    fbList.status === 200 &&
+      fbList.data.items.length > 0 &&
+      fbList.data.items.some((item) => item.id === feedbackId && item.voteCount === 2),
+    JSON.stringify(fbList.data),
+  );
+
+  const fbStaffList = await call('GET', `/workspaces/${workspaceId}/feedback`, {
+    token: staffToken,
+    workspaceId,
+  });
+  check('member (workspace.view) juga bisa melihat feedback workspace', fbStaffList.status === 200);
+
+  const fbDecision = await call('POST', `/workspaces/${workspaceId}/feedback/${feedbackId}/decision`, {
+    token: ownerToken,
+    workspaceId,
+    body: { status: 'ACCEPTED', decisionNote: 'Masuk backlog sprint depan' },
+  });
+  check(
+    'owner putuskan feedback ACCEPTED + catatan',
+    fbDecision.status === 201 &&
+      fbDecision.data.status === 'ACCEPTED' &&
+      fbDecision.data.decisionNote === 'Masuk backlog sprint depan',
+    JSON.stringify(fbDecision.data),
+  );
+
+  const fbDecideAgain = await call('POST', `/workspaces/${workspaceId}/feedback/${feedbackId}/decision`, {
+    token: ownerToken,
+    workspaceId,
+    body: { status: 'REJECTED' },
+  });
+  check('putuskan ulang feedback 409', fbDecideAgain.status === 409);
+
+  const fbStaffDecision = await call('POST', `/workspaces/${workspaceId}/feedback/${fbCreate.data.id}/decision`, {
+    token: staffToken,
+    workspaceId,
+    body: { status: 'ACCEPTED' },
+  });
+  check('member putuskan feedback 403 (feedback.decide)', fbStaffDecision.status === 403);
+
+  const fbOutsider = await call('GET', `/workspaces/${workspaceId}/feedback`, {
+    token: outsiderToken,
+    workspaceId,
+  });
+  check('outsider list feedback 403', fbOutsider.status === 403);
+
+  const fbBadType = await call('POST', `/workspaces/${workspaceId}/feedback`, {
+    token: staffToken,
+    workspaceId,
+    body: { type: 'SPAM', message: 'x' },
+  });
+  check('tipe feedback invalid 400', fbBadType.status === 400);
+
+  const fbAudit = await call('GET', `/workspaces/${workspaceId}/audit?action=feedback.decide`, {
+    token: ownerToken,
+    workspaceId,
+  });
+  check('audit mencatat feedback.decide', fbAudit.status === 200 && fbAudit.data.items.length > 0);
+
+  await new Promise((resolve) => setTimeout(resolve, 300));
+  const ownerInboxAfterFb = await call('GET', '/notifications', { token: loginOwner.data.token });
+  check(
+    'owner inbox berisi feedback.submitted (triage dinotifikasi)',
+    ownerInboxAfterFb.status === 200 &&
+      ownerInboxAfterFb.data.items.some((item) => item.type === 'feedback.submitted'),
+    JSON.stringify(ownerInboxAfterFb.data?.items?.slice(0, 3)),
+  );
+
+  const staffInboxAfterFb = await call('GET', '/notifications', { token: staffToken });
+  check(
+    'requester dinotifikasi keputusan feedback',
+    staffInboxAfterFb.status === 200 &&
+      staffInboxAfterFb.data.items.some(
+        (item) => item.type === 'feedback.decided' && item.refId === feedbackId,
+      ),
   );
 
   console.log('\n=== 7. LOGOUT ===');

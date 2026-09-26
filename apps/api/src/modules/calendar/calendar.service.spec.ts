@@ -1,4 +1,4 @@
-import { CalendarService } from './calendar.service';
+import { CalendarService, expandRecurrence } from './calendar.service';
 
 describe('CalendarService', () => {
   let service: CalendarService;
@@ -35,7 +35,16 @@ describe('CalendarService', () => {
   describe('getCalendar', () => {
     it('merges 4 sources and sorts by startAt ascending', async () => {
       prisma.calendarEvent.findMany.mockResolvedValue([
-        { id: 'e1', title: 'Offsite', description: null, startAt: new Date(iso(3)), endAt: new Date(iso(4)), allDay: true },
+        {
+          id: 'e1',
+          title: 'Offsite',
+          description: null,
+          startAt: new Date(iso(3)),
+          endAt: new Date(iso(4)),
+          allDay: true,
+          recurrence: 'NONE',
+          recurrenceUntil: null,
+        },
       ]);
       prisma.meeting.findMany.mockResolvedValue([
         { id: 'm1', title: 'Standup', description: null, scheduledAt: new Date(iso(1)), endedAt: null, status: 'SCHEDULED' },
@@ -123,6 +132,148 @@ describe('CalendarService', () => {
       );
       expect(auditService.record).toHaveBeenCalledWith(
         expect.objectContaining({ action: 'calendar.event.create', target: 'event:e9' }),
+      );
+    });
+  });
+
+  describe('recurring events (PRD §86 lanjutan)', () => {
+    const day = 86_400_000;
+    const base = new Date('2026-10-01T09:00:00.000Z'); // Kamis
+
+    const recurringRow = (overrides: Partial<Parameters<typeof expandRecurrence>[0]> = {}) => ({
+      id: 'r1',
+      title: 'Daily standup',
+      description: null,
+      startAt: base,
+      endAt: new Date(base.getTime() + 3_600_000),
+      allDay: false,
+      recurrence: 'DAILY',
+      recurrenceUntil: null,
+      ...overrides,
+    });
+
+    it('expandRecurrence DAILY menghasilkan satu occurence per hari dalam rentang', () => {
+      const from = new Date(base.getTime() + 2 * day);
+      const to = new Date(base.getTime() + 4 * day + 3_600_000);
+      const items = expandRecurrence(recurringRow(), from, to);
+      expect(items.map((item) => item.occurrenceIndex)).toEqual([2, 3, 4]);
+      expect(items[0]?.startAt).toBe(new Date(base.getTime() + 2 * day).toISOString());
+      expect(items.every((item) => item.refId === 'r1')).toBe(true);
+      // id stabil & unik per occurence
+      expect(new Set(items.map((item) => item.id)).size).toBe(items.length);
+    });
+
+    it('expandRecurrence WEEKLY memakai jarak 7 hari mengikuti startAt asli', () => {
+      const items = expandRecurrence(
+        recurringRow({ recurrence: 'WEEKLY' }),
+        new Date(base.getTime() + 7 * day),
+        new Date(base.getTime() + 21 * day),
+      );
+      expect(items.map((item) => item.occurrenceIndex)).toEqual([1, 2, 3]);
+    });
+
+    it('berhenti di recurrenceUntil', () => {
+      const items = expandRecurrence(
+        recurringRow({ recurrenceUntil: new Date(base.getTime() + 2 * day) }),
+        base,
+        new Date(base.getTime() + 30 * day),
+      );
+      expect(items.map((item) => item.occurrenceIndex)).toEqual([0, 1, 2]);
+    });
+
+    it('occurence yang melewati tengah malam tetap muncul bila durasinya menyentuh rentang', () => {
+      // Event 10 jam mulai 23:00 — occurence hari sebelumnya masih menyentuh `from`.
+      const lateEvent = recurringRow({
+        startAt: new Date('2026-10-01T23:00:00.000Z'),
+        endAt: new Date('2026-10-02T09:00:00.000Z'),
+      });
+      const from = new Date('2026-10-02T00:00:00.000Z');
+      const to = new Date('2026-10-02T23:59:59.000Z');
+      const items = expandRecurrence(lateEvent, from, to);
+      expect(items.length).toBeGreaterThanOrEqual(1);
+    });
+
+    it('createEvent menolak recurrence tanpa recurrenceUntil', async () => {
+      await expect(
+        service.createEvent('u-1', 'ws-1', {
+          title: 'Berulang',
+          startAt: iso(1),
+          endAt: iso(2),
+          recurrence: 'DAILY',
+        }),
+      ).rejects.toMatchObject({ code: 'CONFLICT' });
+    });
+
+    it('createEvent menolak recurrenceUntil sebelum startAt', async () => {
+      await expect(
+        service.createEvent('u-1', 'ws-1', {
+          title: 'Mundur',
+          startAt: iso(5),
+          endAt: iso(6),
+          recurrence: 'WEEKLY',
+          recurrenceUntil: iso(1),
+        }),
+      ).rejects.toMatchObject({ code: 'CONFLICT' });
+    });
+
+    it('createEvent menolak kind recurrence tidak dikenal', async () => {
+      await expect(
+        service.createEvent('u-1', 'ws-1', {
+          title: 'Aneh',
+          startAt: iso(1),
+          endAt: iso(2),
+          recurrence: 'MONTHLY',
+          recurrenceUntil: iso(30),
+        }),
+      ).rejects.toMatchObject({ code: 'CONFLICT' });
+    });
+
+    it('createEvent menyimpan recurrence + recurrenceUntil dan mencatatnya di audit', async () => {
+      prisma.calendarEvent.create.mockResolvedValue({
+        id: 'e10',
+        title: 'Weekly sync',
+        description: null,
+        startAt: new Date(iso(1)),
+        endAt: new Date(iso(2)),
+        allDay: false,
+        recurrence: 'WEEKLY',
+        recurrenceUntil: new Date(iso(30)),
+      });
+
+      const created = await service.createEvent('u-1', 'ws-1', {
+        title: 'Weekly sync',
+        startAt: iso(1),
+        endAt: iso(2),
+        recurrence: 'WEEKLY',
+        recurrenceUntil: iso(30),
+      });
+
+      expect(created).toMatchObject({ id: 'e10', recurrence: 'WEEKLY' });
+      expect(prisma.calendarEvent.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({ recurrence: 'WEEKLY' }),
+        }),
+      );
+      expect(auditService.record).toHaveBeenCalledWith(
+        expect.objectContaining({
+          metadata: expect.objectContaining({ recurrence: 'WEEKLY' }),
+        }),
+      );
+    });
+
+    it('getCalendar meng-query deret berulang yang masih relevan dengan rentang', async () => {
+      prisma.project.findMany.mockResolvedValue([]);
+      prisma.task.findMany.mockResolvedValue([]);
+      await service.getCalendar('u-1', 'ws-1', {});
+      expect(prisma.calendarEvent.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            OR: expect.arrayContaining([
+              expect.objectContaining({ recurrence: 'NONE' }),
+              expect.objectContaining({ recurrence: { not: 'NONE' } }),
+            ]),
+          }),
+        }),
       );
     });
   });

@@ -1,6 +1,7 @@
-# BELUM DIKERJAKAN (Status Sesi #6 — 2026-09-22)
+# BELUM DIKERJAKAN (Status Sesi #7 — 2026-09-26)
 
-> Dokumen ini mencatat item yang masih menjadi pekerjaan lanjutan setelah Sesi #6.
+> Dokumen ini mencatat item yang masih menjadi pekerjaan lanjutan setelah Sesi #7.
+> Rekap lengkap Sesi #7: `05-SESI-7-REKAP.md`.
 
 ---
 
@@ -33,8 +34,15 @@
   `rustup default stable-gnu` bila ingin eksperimen lokal tanpa VS).
 
 ## 3. Sisa item lanjutan (opsional / skala berikutnya)
+- [x] **Event recurrence/kalender berulang** — SELESAI Sesi #7 (DAILY/WEEKLY,
+  expansion per query, UI + test).
+- [x] **Feedback loop (Phase 27)** — SELESAI Sesi #7 (Feedback + FeedbackVote,
+  API feedback module, UI FeedbackView, notifikasi feedback.submitted/decided,
+  audit feedback.decide).
+- [x] **Runbook + README** — SELESAI Sesi #7 (docs/RUNBOOK.md, README.md).
 - [ ] Redis adapter untuk Socket.IO multi-instance (ADR-004) — saat butuh >1 replica.
 - [ ] Signing key release APK (`assembleRelease` + keystore) sebelum publish store.
 - [ ] Push notification (FCM) & reminder push (PRD §89 lanjutan).
-- [ ] Event recurrence/kalender berulang.
 - [ ] i18n penuh ID/EN (PRD §129) — arsitektur sudah mendukung.
+- [ ] Phase 26 BETA — butuh keputusan owner: daftar tester, channel distribusi
+      (APK signed via CI sudah siap di release workflow).

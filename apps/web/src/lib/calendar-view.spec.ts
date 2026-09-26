@@ -12,6 +12,7 @@ const entry = (id: string, startAt: string): CalendarEntry => ({
   allDay: false,
   status: 'SCHEDULED',
   refId: id,
+  occurrenceIndex: null,
 });
 
 describe('dateKey', () => {

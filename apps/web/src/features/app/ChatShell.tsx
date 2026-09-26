@@ -19,6 +19,7 @@ import { AdminView } from './AdminView';
 import { OrgTreeView } from './OrgTreeView';
 import { ModerationQueueView } from './ModerationQueueView';
 import { ClientPortalView } from './ClientPortalView';
+import { FeedbackView } from './FeedbackView';
 import { NotificationBell } from './NotificationBell';
 import { canViewAudit } from '../../lib/audit-view';
 import { canViewAdmin } from '../../lib/admin-view';
@@ -47,7 +48,8 @@ type View =
   | 'admin'
   | 'orgtree'
   | 'moderation'
-  | 'client-portal';
+  | 'client-portal'
+  | 'feedback';
 
 export function ChatShell() {
   const { session, logout } = useAuth();
@@ -360,6 +362,15 @@ export function ChatShell() {
                   </li>
                 </>
               ) : null}
+              <li>
+                <button
+                  className={`shell__item${view === 'feedback' ? ' shell__item--active' : ''}`}
+                  onClick={() => setView('feedback')}
+                >
+                  <span className="shell__hash">✎</span>
+                  Feedback
+                </button>
+              </li>
               {auditVisible ? (
                 <li>
                   <button
@@ -432,6 +443,8 @@ export function ChatShell() {
           <OrgTreeView key={activeWorkspace.id} />
         ) : view === 'moderation' && activeWorkspace && moderationVisible ? (
           <ModerationQueueView key={activeWorkspace.id} />
+        ) : view === 'feedback' && activeWorkspace ? (
+          <FeedbackView key={activeWorkspace.id} />
         ) : activeChannel && activeWorkspace ? (
 
           <ChannelView key={activeChannel.id} />

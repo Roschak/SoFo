@@ -11,6 +11,8 @@
 | `01-SUDAH-DIKERJAKAN.md` | Semua yang selesai + terverifikasi |
 | `02-SEDANG-DIKERJAKAN.md` | Pekerjaan yang berhenti di tengah + langkah lanjut persis |
 | `03-BELUM-DIKERJAKAN.md` | Yang belum disentuh, urut sesuai PRD |
+| `04-BUILD-APK-EXE.md` | Panduan build APK (Capacitor) & EXE (Tauri) |
+| `05-SESI-7-REKAP.md` | Rekap Sesi #7: recurrence kalender, feedback loop Phase 27, runbook |
 
 ## Urutan baca saat membuka sesi baru
 
@@ -33,5 +35,6 @@
 - Jangan pernah menyatakan "selesai" jika test/build belum lulus (PRD §104).
 - Jangan menebak; kalau ragu, catat sebagai "perlu keputusan owner" (PRD §102).
 
-Terakhir diperbarui: 2026-09-18, Sesi #2g — Request & Approval (PRD §88) selesai
-(commit `8b28b2f`). Lanjut ke P1 berikutnya di `03-BELUM-DIKERJAKAN.md`.
+Terakhir diperbarui: 2026-09-26, Sesi #7 — Recurrence kalender + Feedback Loop
+(Phase 27) + Runbook/README selesai. Semua verifikasi hijau (373 checks).
+Detail: `05-SESI-7-REKAP.md`. Sisa opsional: `03-BELUM-DIKERJAKAN.md`.

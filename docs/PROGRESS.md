@@ -32,9 +32,9 @@
 | 22 Community | moderation (Sesi #6) | ✅ DONE | ✅ | ✅ | PENDING_REVIEW→approve/remove, UI queue |
 | 23 Client Access | client portal (Sesi #6) | ✅ DONE | ✅ | ✅ | ClientPortalView read-only utk CLIENT/GUEST |
 | 24 Hardening | rate limit + health | ✅ DONE | ✅ | ✅ | E2E 112/112 + 15/15 + 197/197 unit |
-| 25 Production Readiness | CI + backup + release | ✅ PARTIAL | ✅ | ✅ | quality+release workflow; APK fisik OK |
-| 26 Beta | — | ⬜ NOT STARTED | — | — | |
-| 27 Feedback Loop | — | ⬜ NOT STARTED | — | — | |
+| 25 Production Readiness | CI + backup + release + runbook | ✅ DONE | ✅ | ✅ | Sesi #7: RUNBOOK + README; quality+release workflow; APK fisik OK |
+| 26 Beta | — | ⬜ NOT STARTED | — | — | butuh keputusan owner (tester list, distribusi) |
+| 27 Feedback Loop | feedback/ | ✅ DONE | ✅ | ✅ | Sesi #7; Feedback+Vote, UI, notif, audit; recurrence kalender jg selesai |
 
 ## MVP P0 & P1 Acceptance (PRD §140) — sisi API & Web
 
@@ -60,7 +60,18 @@
 20. [x] Akses data sesuai permission — PermissionGuard di semua endpoint workspace
 21. [x] Landing page & Product Portfolio — animasi scroll memukau, top progress bar, interactive mockups
 
-## Verifikasi Terakhir (2026-09-22 — Sesi #6)
+## Verifikasi Terakhir (2026-09-26 — Sesi #7)
+
+| Check | Hasil |
+|---|---|
+| Unit tests | 224/224 pass (127 API + 89 web + 8 shared) |
+| HTTP E2E (`test/http-smoke.mjs`) | 134/134 pass (+22 recurrence & feedback) |
+| Realtime E2E (`test/realtime-smoke.mjs`) | 15/15 pass (100% acceptance) |
+| Lint / typecheck / build | 0 error across all workspaces |
+| Migration baru | recurrence + feedback_loop applied |
+| Rekap Sesi #7 | `docs/notes/05-SESI-7-REKAP.md` |
+
+### Historis — Sesi #6 (2026-09-22)
 
 | Check | Hasil |
 |---|---|

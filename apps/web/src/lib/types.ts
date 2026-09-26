@@ -96,6 +96,8 @@ export interface CalendarEntry {
   allDay: boolean;
   status: string | null;
   refId: string;
+  /** Non-null hanya untuk occurence hasil ekspansi event berulang. */
+  occurrenceIndex: number | null;
 }
 
 export interface CalendarReminder extends CalendarEntry {
@@ -149,7 +151,9 @@ export type NotificationType =
   | 'request.rejected'
   | 'member.invited'
   | 'task.assigned'
-  | 'message.pending';
+  | 'message.pending'
+  | 'feedback.submitted'
+  | 'feedback.decided';
 
 export interface Notification {
   id: string;
@@ -167,6 +171,25 @@ export interface Notification {
 }
 
 export type ApiError = SofoErrorBody;
+
+export type FeedbackType = 'BUG' | 'UX' | 'FEATURE_REQUEST';
+export type FeedbackStatus = 'OPEN' | 'REVIEWED' | 'ACCEPTED' | 'REJECTED';
+
+export interface Feedback {
+  id: string;
+  workspaceId: string;
+  reporterId: string;
+  reporterName: string | null;
+  type: FeedbackType;
+  message: string;
+  status: FeedbackStatus;
+  decisionNote: string | null;
+  decidedByName: string | null;
+  decidedAt: string | null;
+  voteCount: number;
+  votedByMe: boolean;
+  createdAt: string;
+}
 
 export interface AuthSession {
   user: User;

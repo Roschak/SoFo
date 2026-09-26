@@ -58,6 +58,8 @@ export const SOFO_PERMISSIONS = [
   // community moderation (PRD §93)
   'message.moderate',
   'moderation.queue.view',
+  // feedback loop (PRD §98, Phase 27)
+  'feedback.decide',
 ] as const;
 
 export type SofoPermission = (typeof SOFO_PERMISSIONS)[number];

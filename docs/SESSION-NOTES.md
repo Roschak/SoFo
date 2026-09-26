@@ -5,6 +5,45 @@
 
 ---
 
+## Sesi #7 — 2026-09-26 — Recurrence Kalender + Feedback Loop (Phase 27) + Runbook — SELESAI ✅
+
+> Rekap penuh: `docs/notes/05-SESI-7-REKAP.md`. Ringkasan:
+
+### Yang sudah selesai (semua ADDITIVE — tidak ada modul lama yang diubah)
+- **Recurrence kalender (PRD §86 lanjutan)**: kolom `recurrence`/`recurrenceUntil`
+  + migration, `expandRecurrence()` DAILY/WEEKLY per query range, validasi create
+  (span maks 2 tahun), UI selector Berulang + hint jumlah occurence + prefix ↻.
+- **Feedback loop (PRD §98, Phase 27 ✅)**: model `Feedback`/`FeedbackVote` +
+  migration, permission `feedback.decide` (OWNER/ADMIN), modul API
+  `modules/feedback` (submit/vote/list/decide, idempotent vote 409,
+  sekali-putus 409), UI `FeedbackView` (kirim/vote/filter/keputusan),
+  notifikasi `feedback.submitted`/`feedback.decided` via event bus, audit
+  `feedback.decide`, nav Feedback di ChatShell.
+- **Dokumentasi**: `README.md` (root) + `docs/RUNBOOK.md` (health, backup,
+  restore, migration, rate limit, insiden, release) — melengkapi Phase 25.
+
+### Hasil verifikasi (semua hijau)
+| Check | Hasil |
+|---|---|
+| Unit tests | 224/224 (127 API + 89 web + 8 shared) |
+| HTTP E2E | 134/134 (+22 acceptance baru) |
+| Realtime E2E | 15/15 |
+| Lint / typecheck / build | 0 error, 3 workspace |
+| Migration | 2 baru applied (recurrence, feedback_loop) |
+
+### Keputusan / temuan
+- 3 failure smoke awal = bug ekspektasi test + 1 bug service vote count
+  (hardcoded 1 → refetch setelah create). Semua diperbaiki; detail di rekap.
+- Tanggal di smoke kini dinamis (`isoDay()` UTC) — kebal drift waktu.
+- Smoke berulang cepat memicu 429 (rate limit auth) → restart API sebelum run.
+
+### Yang BELUM selesai (lanjutkan di sini)
+- Lihat `docs/notes/03-BELUM-DIKERJAKAN.md` — tinggal item opsional
+  (Redis adapter, FCM push, i18n, signing key store) + Phase 26 Beta
+  (butuh keputusan owner).
+
+---
+
 ## Sesi #6 — 2026-09-22 — Audit E2E + P2 (Moderasi & Portal Client) + APK Fisik — SELESAI ✅
 
 ### Yang sudah selesai

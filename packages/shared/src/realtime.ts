@@ -84,7 +84,9 @@ export type NotificationType =
   | 'request.rejected'
   | 'member.invited'
   | 'task.assigned'
-  | 'message.pending';
+  | 'message.pending'
+  | 'feedback.submitted'
+  | 'feedback.decided';
 
 export interface NotificationView {
   readonly id: string;

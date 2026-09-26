@@ -32,6 +32,9 @@ model User {
   requestsDecided  Request[] @relation("RequestsDecided")
   notifications    Notification[] @relation("NotificationsFor")
   notificationsActed Notification[] @relation("NotificationsActed")
+  feedbackReported Feedback[] @relation("FeedbackReported")
+  feedbackDecided  Feedback[] @relation("FeedbackDecided")
+  feedbackVotes    FeedbackVote[] @relation("FeedbackVotes")
   auditLogs        AuditLog[]
 
   @@index([email])
@@ -81,6 +84,7 @@ model Workspace {
   requests    Request[]
   notifications Notification[]
   attendanceRecords AttendanceRecord[]
+  feedbacks   Feedback[]
   auditLogs   AuditLog[]
 
   @@index([ownerId])
@@ -344,6 +348,10 @@ model CalendarEvent {
   startAt     DateTime
   endAt       DateTime
   allDay      Boolean  @default(false)
+  /// Recurrence (PRD §86 lanjutan): NONE = sekali, DAILY/WEEKLY = berulang
+  /// sampai `recurrenceUntil`, lama berulang mengikuti startAt asli.
+  recurrence       String   @default("NONE")
+  recurrenceUntil  DateTime?
   createdById String
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -441,6 +449,54 @@ model Notification {
 enum NotificationStatus {
   UNREAD
   READ
+}
+
+// ─── 27 FEEDBACK LOOP (PRD §98, Phase 27) ─────────────────────────────────
+
+enum FeedbackType {
+  BUG
+  UX
+  FEATURE_REQUEST
+}
+
+enum FeedbackStatus {
+  OPEN
+  REVIEWED
+  ACCEPTED
+  REJECTED
+}
+
+model Feedback {
+  id           String   @id @default(uuid())
+  workspaceId  String
+  workspace    Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  reporterId   String
+  reporter     User     @relation("FeedbackReported", fields: [reporterId], references: [id], onDelete: Cascade)
+  type         FeedbackType
+  message      String
+  status       FeedbackStatus @default(OPEN)
+  decisionNote String?
+  decidedById  String?
+  decidedBy    User?    @relation("FeedbackDecided", fields: [decidedById], references: [id], onDelete: SetNull)
+  decidedAt    DateTime?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  votes        FeedbackVote[]
+
+  @@index([workspaceId, status])
+  @@index([reporterId])
+}
+
+model FeedbackVote {
+  id         String   @id @default(uuid())
+  feedbackId String
+  feedback   Feedback @relation(fields: [feedbackId], references: [id], onDelete: Cascade)
+  userId     String
+  user       User     @relation("FeedbackVotes", fields: [userId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+
+  @@unique([feedbackId, userId])
 }
 
 // ─── 23 AUDIT ────────────────────────────────────────────────────────────────

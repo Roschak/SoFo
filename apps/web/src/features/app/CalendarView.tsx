@@ -5,10 +5,15 @@ import { api } from '../../lib/api';
 import { canViewAudit as canManageCalendar } from '../../lib/audit-view';
 import {
   KIND_CLASS,
+  RECURRENCE_LABEL,
+  RECURRENCE_OPTIONS,
   buildMonthGrid,
+  countRecurrenceOccurrences,
   dateKey,
   formatDayLabel,
   formatDueIn,
+  validateRecurrenceInput,
+  type RecurrenceOption,
 } from '../../lib/calendar-view';
 import { useScrollReveal } from '../../hooks/useScrollReveal';
 import { Button } from '../../components/ui/Button';
@@ -43,6 +48,8 @@ export function CalendarView() {
   const [startAt, setStartAt] = useState('');
   const [endAt, setEndAt] = useState('');
   const [description, setDescription] = useState('');
+  const [recurrence, setRecurrence] = useState<RecurrenceOption>('NONE');
+  const [recurrenceUntil, setRecurrenceUntil] = useState('');
   const [busy, setBusy] = useState(false);
   const [dialogError, setDialogError] = useState<string | null>(null);
 
@@ -114,6 +121,11 @@ export function CalendarView() {
 
   async function handleCreate(event: FormEvent) {
     event.preventDefault();
+    const recurrenceError = validateRecurrenceInput(recurrence, recurrenceUntil, startAt);
+    if (recurrenceError) {
+      setDialogError(recurrenceError);
+      return;
+    }
     setBusy(true);
     setDialogError(null);
     try {
@@ -126,6 +138,10 @@ export function CalendarView() {
           startAt: new Date(startAt).toISOString(),
           endAt: new Date(endAt).toISOString(),
           description: description.trim() || undefined,
+          recurrence,
+          ...(recurrence !== 'NONE'
+            ? { recurrenceUntil: new Date(recurrenceUntil).toISOString() }
+            : {}),
         },
       });
       setDialog(false);
@@ -133,6 +149,8 @@ export function CalendarView() {
       setStartAt('');
       setEndAt('');
       setDescription('');
+      setRecurrence('NONE');
+      setRecurrenceUntil('');
       await fetchCalendar();
       await fetchReminders();
     } catch (cause) {
@@ -202,6 +220,7 @@ export function CalendarView() {
                       className={`calendar__entry ${KIND_CLASS[entry.kind]}`}
                       title={`${entry.title} · ${CALENDAR_KIND_LABEL[entry.kind]} · ${formatDayLabel(entry.startAt)}`}
                     >
+                      {entry.occurrenceIndex !== null ? '↻ ' : ''}
                       {entry.title}
                     </span>
                   ))}
@@ -299,6 +318,39 @@ export function CalendarView() {
               onChange={(event) => setDescription(event.target.value)}
               maxLength={2000}
             />
+            <div className="calendar__recurrence">
+              <span className="calendar__recurrence-label">Berulang</span>
+              <div className="calendar__recurrence-options">
+                {RECURRENCE_OPTIONS.map((option) => (
+                  <button
+                    key={option}
+                    type="button"
+                    className={`calendar__recurrence-option${
+                      recurrence === option ? ' calendar__recurrence-option--active' : ''
+                    }`}
+                    onClick={() => setRecurrence(option)}
+                  >
+                    {RECURRENCE_LABEL[option]}
+                  </button>
+                ))}
+              </div>
+            </div>
+            {recurrence !== 'NONE' ? (
+              <>
+                <Field
+                  label="Berulang sampai"
+                  type="date"
+                  value={recurrenceUntil}
+                  onChange={(event) => setRecurrenceUntil(event.target.value)}
+                  required
+                />
+                {countRecurrenceOccurrences(recurrence, startAt, recurrenceUntil) ? (
+                  <p className="calendar__recurrence-hint">
+                    Akan dibuat {countRecurrenceOccurrences(recurrence, startAt, recurrenceUntil)} occurence.
+                  </p>
+                ) : null}
+              </>
+            ) : null}
             {dialogError ? <p className="calendar__error">{dialogError}</p> : null}
             <Button type="submit" loading={busy} disabled={title.trim().length < 2 || !startAt || !endAt}>
               Buat event

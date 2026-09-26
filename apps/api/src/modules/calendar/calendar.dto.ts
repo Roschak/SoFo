@@ -2,6 +2,7 @@ import { Type } from 'class-transformer';
 import {
   IsBoolean,
   IsDateString,
+  IsIn,
   IsInt,
   IsOptional,
   IsString,
@@ -54,6 +55,16 @@ export class CreateEventDto {
   @IsString()
   @MaxLength(2000)
   description?: string;
+
+  /** PRD §86 lanjutan: NONE (default) | DAILY | WEEKLY. */
+  @IsOptional()
+  @IsIn(['NONE', 'DAILY', 'WEEKLY'])
+  recurrence?: string;
+
+  /** Wajib saat recurrence ≠ NONE — batas akhir deret. */
+  @IsOptional()
+  @IsDateString()
+  recurrenceUntil?: string;
 }
 
 /** DELETE /workspaces/:workspaceId/calendar/events/:eventId */

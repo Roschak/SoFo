@@ -1,5 +1,29 @@
 import type { CalendarEntry, CalendarEntryKind } from './types';
 
+/** Opsi recurrence event manual (harus sinkron dgn calendar.dto API). */
+export const RECURRENCE_OPTIONS = ['NONE', 'DAILY', 'WEEKLY'] as const;
+export type RecurrenceOption = (typeof RECURRENCE_OPTIONS)[number];
+
+export const RECURRENCE_LABEL: Record<RecurrenceOption, string> = {
+  NONE: 'Sekali',
+  DAILY: 'Setiap hari',
+  WEEKLY: 'Setiap minggu',
+};
+
+/** Validasi form recurrence: sampai kapan deret berjalan (wajib utk berulang). */
+export function validateRecurrenceInput(
+  recurrence: RecurrenceOption,
+  recurrenceUntil: string,
+  startAt: string,
+): string | null {
+  if (recurrence === 'NONE') return null;
+  if (!recurrenceUntil) return 'Sampai kapan wajib diisi untuk event berulang.';
+  if (startAt && new Date(recurrenceUntil).getTime() < new Date(startAt).getTime()) {
+    return 'Akhir berulang tidak boleh sebelum mulai.';
+  }
+  return null;
+}
+
 export interface CalendarDayCell {
   /** ISO date key `YYYY-MM-DD` in local time. */
   readonly key: string;
@@ -82,4 +106,18 @@ export function formatDueIn(days: number): string {
   if (days === 0) return 'Hari ini';
   if (days === 1) return 'Besok';
   return `${days} hari lagi`;
+}
+
+/** Jumlah occurence unik yang akan dikirim API (guard biar tidak tanpa batas). */
+export function countRecurrenceOccurrences(
+  recurrence: RecurrenceOption,
+  startAt: string,
+  recurrenceUntil: string,
+): number | null {
+  if (recurrence === 'NONE' || !startAt || !recurrenceUntil) return null;
+  const start = new Date(startAt).getTime();
+  const until = new Date(recurrenceUntil).getTime();
+  if (Number.isNaN(start) || Number.isNaN(until) || until < start) return null;
+  const stepMs = recurrence === 'DAILY' ? 86_400_000 : 7 * 86_400_000;
+  return Math.floor((until - start) / stepMs) + 1;
 }

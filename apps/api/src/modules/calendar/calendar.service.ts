@@ -9,9 +9,21 @@ import { conflict, notFound } from '@sofo/shared';
  * 4 sources — manual events, meetings (scheduledAt), project deadlines,
  * task deadlines — plus reminders computed by horizon windows.
  * Every read is tenant-scoped by workspaceId (PRD §19).
+ *
+ * Recurring manual events (§86 lanjutan): DAILY/WEEKLY events expand into
+ * concrete occurrences between the query range — stored rows never multiply.
  */
 
 export type CalendarEntryKind = 'event' | 'meeting' | 'project_deadline' | 'task_deadline';
+
+/** Supported recurrence kinds (kept minimal & predictable, PRD §62). */
+export const RECURRENCE_KINDS = ['NONE', 'DAILY', 'WEEKLY'] as const;
+export type RecurrenceKind = (typeof RECURRENCE_KINDS)[number];
+
+/** Longest horizon an occurrence expansion may reach (2 years guard rail). */
+const MAX_RECURRENCE_SPAN_MS = 730 * 86_400_000;
+const DAY_MS = 86_400_000;
+const WEEK_MS = 7 * DAY_MS;
 
 export interface CalendarEntryView {
   readonly kind: CalendarEntryKind;
@@ -23,6 +35,8 @@ export interface CalendarEntryView {
   readonly allDay: boolean;
   readonly status: string | null;
   readonly refId: string;
+  /** Non-null only for expanded occurrences of recurring events. */
+  readonly occurrenceIndex: number | null;
 }
 
 @Injectable()
@@ -48,7 +62,19 @@ export class CalendarService {
 
     const [events, meetings, projects, tasks] = await Promise.all([
       this.prisma.calendarEvent.findMany({
-        where: { workspaceId, startAt: { gte: from, lte: to } },
+        where: {
+          workspaceId,
+          OR: [
+            // One-shot events inside the range...
+            { recurrence: 'NONE', startAt: { gte: from, lte: to } },
+            // ...or recurring events whose series can still reach the range.
+            {
+              recurrence: { not: 'NONE' },
+              startAt: { lte: to },
+              OR: [{ recurrenceUntil: { gte: from } }, { recurrenceUntil: null }],
+            },
+          ],
+        },
         orderBy: { startAt: 'asc' },
       }),
       this.prisma.meeting.findMany({
@@ -64,17 +90,24 @@ export class CalendarService {
     ]);
 
     const items: CalendarEntryView[] = [
-      ...events.map((event) => ({
-        kind: 'event' as const,
-        id: `event:${event.id}`,
-        title: event.title,
-        description: event.description,
-        startAt: event.startAt.toISOString(),
-        endAt: event.endAt.toISOString(),
-        allDay: event.allDay,
-        status: null,
-        refId: event.id,
-      })),
+      ...events.flatMap((event) =>
+        event.recurrence === 'NONE'
+          ? [
+              {
+                kind: 'event' as const,
+                id: `event:${event.id}`,
+                title: event.title,
+                description: event.description,
+                startAt: event.startAt.toISOString(),
+                endAt: event.endAt.toISOString(),
+                allDay: event.allDay,
+                status: null,
+                refId: event.id,
+                occurrenceIndex: null,
+              },
+            ]
+          : expandRecurrence(event, from, to),
+      ),
       ...meetings.map((meeting) => ({
         kind: 'meeting' as const,
         id: `meeting:${meeting.id}`,
@@ -85,6 +118,7 @@ export class CalendarService {
         allDay: false,
         status: meeting.status,
         refId: meeting.id,
+        occurrenceIndex: null,
       })),
       ...projects.map((project) => ({
         kind: 'project_deadline' as const,
@@ -96,6 +130,7 @@ export class CalendarService {
         allDay: true,
         status: project.status,
         refId: project.id,
+        occurrenceIndex: null,
       })),
       ...tasks.map((task) => ({
         kind: 'task_deadline' as const,
@@ -107,6 +142,7 @@ export class CalendarService {
         allDay: true,
         status: task.status,
         refId: task.id,
+        occurrenceIndex: null,
       })),
     ].sort((a, b) => a.startAt.localeCompare(b.startAt));
 
@@ -150,7 +186,15 @@ export class CalendarService {
   async createEvent(
     actorId: string,
     workspaceId: string,
-    input: { title: string; startAt: string; endAt: string; allDay?: boolean; description?: string },
+    input: {
+      title: string;
+      startAt: string;
+      endAt: string;
+      allDay?: boolean;
+      description?: string;
+      recurrence?: string;
+      recurrenceUntil?: string;
+    },
   ) {
     await this.authorizationService.assertPermission(actorId, workspaceId, 'calendar.event.create');
 
@@ -163,6 +207,27 @@ export class CalendarService {
       throw conflict('endAt must not be earlier than startAt');
     }
 
+    const recurrence = input.recurrence ?? 'NONE';
+    if (!RECURRENCE_KINDS.includes(recurrence as RecurrenceKind)) {
+      throw conflict(`recurrence must be one of: ${RECURRENCE_KINDS.join(', ')}`);
+    }
+    let recurrenceUntil: Date | null = null;
+    if (recurrence !== 'NONE') {
+      if (!input.recurrenceUntil) {
+        throw conflict('recurrenceUntil is required for recurring events');
+      }
+      recurrenceUntil = new Date(input.recurrenceUntil);
+      if (Number.isNaN(recurrenceUntil.getTime())) {
+        throw conflict('recurrenceUntil must be a valid date');
+      }
+      if (recurrenceUntil.getTime() < startAt.getTime()) {
+        throw conflict('recurrenceUntil must not be earlier than startAt');
+      }
+      if (recurrenceUntil.getTime() - startAt.getTime() > MAX_RECURRENCE_SPAN_MS) {
+        throw conflict('recurrence span must not exceed 2 years');
+      }
+    }
+
     const event = await this.prisma.calendarEvent.create({
       data: {
         workspaceId,
@@ -171,6 +236,8 @@ export class CalendarService {
         startAt,
         endAt,
         allDay: input.allDay ?? false,
+        recurrence,
+        recurrenceUntil,
         createdById: actorId,
       },
     });
@@ -181,7 +248,11 @@ export class CalendarService {
       action: 'calendar.event.create',
       target: `event:${event.id}`,
       result: 'SUCCESS',
-      metadata: { title: event.title, startAt: event.startAt.toISOString() },
+      metadata: {
+        title: event.title,
+        startAt: event.startAt.toISOString(),
+        recurrence: event.recurrence,
+      },
     });
 
     return this.toEventView(event);
@@ -230,6 +301,8 @@ export class CalendarService {
     startAt: Date;
     endAt: Date;
     allDay: boolean;
+    recurrence: string;
+    recurrenceUntil: Date | null;
   }) {
     return {
       id: event.id,
@@ -238,10 +311,65 @@ export class CalendarService {
       startAt: event.startAt.toISOString(),
       endAt: event.endAt.toISOString(),
       allDay: event.allDay,
+      recurrence: event.recurrence,
+      recurrenceUntil: event.recurrenceUntil?.toISOString() ?? null,
     };
   }
 }
 
 export interface ReminderView extends CalendarEntryView {
   readonly dueInDays: number;
+}
+
+interface RecurringEventRow {
+  readonly id: string;
+  readonly title: string;
+  readonly description: string | null;
+  readonly startAt: Date;
+  readonly endAt: Date;
+  readonly allDay: boolean;
+  readonly recurrence: string;
+  readonly recurrenceUntil: Date | null;
+}
+
+/**
+ * Expands a DAILY/WEEKLY series into concrete occurrences overlapping
+ * [from, to]. Pure — no mutation, no store writes. Occurrence id is stable
+ * (`event:<id>#<n>`) so the client can key on it without duplicates.
+ */
+export function expandRecurrence(
+  event: RecurringEventRow,
+  from: Date,
+  to: Date,
+): CalendarEntryView[] {
+  const stepMs = event.recurrence === 'DAILY' ? DAY_MS : WEEK_MS;
+  const durationMs = event.endAt.getTime() - event.startAt.getTime();
+  const seriesEnd = event.recurrenceUntil
+    ? event.recurrenceUntil.getTime()
+    : event.startAt.getTime() + MAX_RECURRENCE_SPAN_MS;
+
+  // First occurrence at-or-after `from` (aligned to the series grid), then
+  // walk forward while occurrences still start within [from, to].
+  const elapsed = from.getTime() - event.startAt.getTime();
+  const stepsFromStart = elapsed <= 0 ? 0 : Math.ceil(elapsed / stepMs);
+
+  const items: CalendarEntryView[] = [];
+  for (let index = stepsFromStart; ; index += 1) {
+    const occurrenceStart = event.startAt.getTime() + index * stepMs;
+    if (occurrenceStart > to.getTime() || occurrenceStart > seriesEnd) break;
+    if (occurrenceStart + durationMs < from.getTime()) continue;
+    items.push({
+      kind: 'event',
+      id: `event:${event.id}#${index}`,
+      title: event.title,
+      description: event.description,
+      startAt: new Date(occurrenceStart).toISOString(),
+      endAt: new Date(occurrenceStart + durationMs).toISOString(),
+      allDay: event.allDay,
+      status: null,
+      refId: event.id,
+      occurrenceIndex: index,
+    });
+  }
+  return items;
 }
