@@ -33,7 +33,7 @@
 | 23 Client Access | client portal (Sesi #6) | ✅ DONE | ✅ | ✅ | ClientPortalView read-only utk CLIENT/GUEST |
 | 24 Hardening | rate limit + health | ✅ DONE | ✅ | ✅ | E2E 112/112 + 15/15 + 197/197 unit |
 | 25 Production Readiness | CI + backup + release + runbook | ✅ DONE | ✅ | ✅ | Sesi #7: RUNBOOK + README; quality+release workflow; APK fisik OK |
-| 26 Beta | — | ⬜ NOT STARTED | — | — | butuh keputusan owner (tester list, distribusi) |
+| 26 Beta | BETA 1 dibangun | 🟨 IN PROGRESS | — | — | Sesi #7: APK release signed v0.1.0-beta.1; panduan & tester list di `docs/notes/06-BETA-PHASE26.md`; backend beta = keputusan owner |
 | 27 Feedback Loop | feedback/ | ✅ DONE | ✅ | ✅ | Sesi #7; Feedback+Vote, UI, notif, audit; recurrence kalender jg selesai |
 
 ## MVP P0 & P1 Acceptance (PRD §140) — sisi API & Web

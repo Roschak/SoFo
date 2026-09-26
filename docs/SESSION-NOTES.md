@@ -42,6 +42,19 @@
   (Redis adapter, FCM push, i18n, signing key store) + Phase 26 Beta
   (butuh keputusan owner).
 
+### Tambahan akhir Sesi #7 — verifikasi ulang + commit + BETA 1 ✅
+- Verifikasi penuh diulang dari nol: lint 0, typecheck 0, unit 224/224,
+  build sukses, HTTP E2E **134/134**, realtime **15/15** — semua hijau.
+- Commit: `65e1e91` (33 file, +2353/−30).
+- **Phase 26 Beta dimulai**: APK release **signed** v0.1.0-beta.1 (3.3 MB)
+  + debug (4.3 MB) dibangun dari commit ini (`cap sync` + `gradlew
+  assembleDebug assembleRelease`, Java 17 user-space), diverifikasi
+  apksigner (CN=SOFO Souloffice). Artefak disalin ke `data/sofo-v0.1.0-beta.1-*.apk`.
+- Panduan beta lengkap (tester list, distribusi, skenario uji, loop
+  feedback, known issue, rollback): `docs/notes/06-BETA-PHASE26.md`.
+- **Perlu keputusan owner (PRD §102)**: backend untuk tester — WiFi lokal
+  atau VPS + HTTPS. EXE Windows: push tag `v0.1.0-beta.1` → artifact CI.
+
 ---
 
 ## Sesi #6 — 2026-09-22 — Audit E2E + P2 (Moderasi & Portal Client) + APK Fisik — SELESAI ✅

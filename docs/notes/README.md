@@ -13,6 +13,7 @@
 | `03-BELUM-DIKERJAKAN.md` | Yang belum disentuh, urut sesuai PRD |
 | `04-BUILD-APK-EXE.md` | Panduan build APK (Capacitor) & EXE (Tauri) |
 | `05-SESI-7-REKAP.md` | Rekap Sesi #7: recurrence kalender, feedback loop Phase 27, runbook |
+| `06-BETA-PHASE26.md` | Phase 26 Beta: artefak rilis, daftar tester, distribusi, checklist |
 
 ## Urutan baca saat membuka sesi baru
 

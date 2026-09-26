@@ -44,5 +44,7 @@
 - [ ] Signing key release APK (`assembleRelease` + keystore) sebelum publish store.
 - [ ] Push notification (FCM) & reminder push (PRD §89 lanjutan).
 - [ ] i18n penuh ID/EN (PRD §129) — arsitektur sudah mendukung.
-- [ ] Phase 26 BETA — butuh keputusan owner: daftar tester, channel distribusi
-      (APK signed via CI sudah siap di release workflow).
+- [ ] Phase 26 BETA — APK release signed v0.1.0-beta.1 SUDAH DIBANGUN & diverifikasi
+      (lihat `06-BETA-PHASE26.md`). Sisa: keputusan owner utk backend beta
+      (WiFi lokal vs VPS+HTTPS), isi daftar tester, kirim APK, tag `v0.1.0-beta.1`
+      utk EXE via CI.
