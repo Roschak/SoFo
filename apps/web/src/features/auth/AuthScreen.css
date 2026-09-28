@@ -82,3 +82,23 @@
 .auth__switch-button:hover {
   text-decoration: underline;
 }
+
+/* Phase 26 beta: server URL config (native shell only). */
+.auth__server {
+  border-top: 1px solid var(--sofo-ink-700);
+  padding-top: var(--sofo-sp-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sofo-sp-3);
+}
+
+.auth__server-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--sofo-sp-3);
+}
+
+.auth__server-feedback {
+  font-size: var(--sofo-fs-sm);
+  color: var(--sofo-text-500);
+}

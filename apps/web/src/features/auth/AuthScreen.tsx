@@ -3,6 +3,14 @@ import { ApiRequestError } from '../../lib/api';
 import { useAuth } from '../../state/AuthContext';
 import { Button } from '../../components/ui/Button';
 import { Field } from '../../components/ui/Field';
+import {
+  DEFAULT_SERVER_URL,
+  isNativePlatform,
+  loadServerUrl,
+  probeServer,
+  resetServerUrl,
+  saveServerUrl,
+} from '../../lib/server-config';
 import './AuthScreen.css';
 
 type Mode = 'login' | 'register';
@@ -15,6 +23,32 @@ export function AuthScreen() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+
+  // Phase 26 beta: native testers point the app at the owner's LAN server.
+  const native = isNativePlatform();
+  const [serverUrl, setServerUrl] = useState(() => loadServerUrl());
+  const [serverBusy, setServerBusy] = useState(false);
+  const [serverFeedback, setServerFeedback] = useState<string | null>(null);
+
+  async function handleSaveServer(event: FormEvent) {
+    event.preventDefault();
+    const saved = saveServerUrl(serverUrl);
+    if (saved === null) {
+      setServerFeedback('URL tidak valid — pakai format http://IP:PORT');
+      return;
+    }
+    setServerUrl(saved);
+    setServerBusy(true);
+    setServerFeedback('Menguji koneksi…');
+    const latency = await probeServer(saved);
+    setServerBusy(false);
+    if (latency === null) {
+      setServerFeedback('Server tidak terjangkau — cek alamat, server hidup, & WiFi');
+      navigator.vibrate?.(120);
+    } else {
+      setServerFeedback(`Terhubung (${latency} ms)`);
+    }
+  }
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
@@ -92,6 +126,41 @@ export function AuthScreen() {
             {mode === 'login' ? 'Masuk' : 'Daftar'}
           </Button>
         </form>
+
+        {native ? (
+          <form className="auth__server" onSubmit={handleSaveServer}>
+            <Field
+              label="Server (beta — WiFi sama dengan owner)"
+              type="text"
+              inputMode="url"
+              placeholder={DEFAULT_SERVER_URL}
+              value={serverUrl}
+              onChange={(event) => setServerUrl(event.target.value)}
+              spellCheck={false}
+            />
+            <div className="auth__server-actions">
+              <Button type="submit" variant="ghost" size="sm" loading={serverBusy}>
+                Simpan & uji koneksi
+              </Button>
+              <button
+                type="button"
+                className="auth__switch-button"
+                onClick={() => {
+                  resetServerUrl();
+                  setServerUrl(DEFAULT_SERVER_URL);
+                  setServerFeedback(null);
+                }}
+              >
+                Pakai default
+              </button>
+            </div>
+            {serverFeedback ? (
+              <p className="auth__server-feedback" role="status">
+                {serverFeedback}
+              </p>
+            ) : null}
+          </form>
+        ) : null}
 
         <p className="auth__switch">
           {mode === 'login' ? 'Belum punya akun?' : 'Sudah punya akun?'}{' '}

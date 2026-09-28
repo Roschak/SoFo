@@ -44,7 +44,10 @@
 - [ ] Signing key release APK (`assembleRelease` + keystore) sebelum publish store.
 - [ ] Push notification (FCM) & reminder push (PRD §89 lanjutan).
 - [ ] i18n penuh ID/EN (PRD §129) — arsitektur sudah mendukung.
-- [ ] Phase 26 BETA — APK release signed v0.1.0-beta.1 SUDAH DIBANGUN & diverifikasi
-      (lihat `06-BETA-PHASE26.md`). Sisa: keputusan owner utk backend beta
-      (WiFi lokal vs VPS+HTTPS), isi daftar tester, kirim APK, tag `v0.1.0-beta.1`
-      utk EXE via CI.
+- [~] **Phase 26 BETA** — Sesi #8 (2026-09-28): keputusan owner = **Opsi A
+      (WiFi lokal)**; APK **beta.2** (signed, versionCode 2) dibangun dengan
+      **Server URL configurable in-app** + CORS multi-origin; server beta LIVE di
+      `http://192.168.68.107:4001`; verifikasi hijau (236 unit + 134 HTTP + 15
+      realtime). Sisa (butuh owner/manual): izinkan Node.js di firewall saat
+      prompt pertama, isi daftar tester (06-BETA §4), kirim APK beta.2,
+      tag `v0.1.0-beta.2` utk EXE via CI.

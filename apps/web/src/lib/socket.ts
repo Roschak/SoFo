@@ -10,13 +10,16 @@ import type {
   TypingUpdatedEvent,
   WorkspaceJoinPayload,
 } from '@sofo/shared';
+import { isNativePlatform, loadServerUrl } from './server-config';
 
 /**
  * Socket client (ADR-004). Token goes in the handshake; the server rejects
- * invalid sessions before accepting the connection.
+ * invalid sessions before accepting the connection. The native shell connects
+ * to the tester-configurable server URL; web builds stay same-origin.
  */
 export function createSocketConnection(token: string): Socket {
-  return io('/', {
+  const uri = isNativePlatform() ? loadServerUrl() : '/';
+  return io(uri, {
     auth: { token },
     transports: ['websocket', 'polling'],
     reconnection: true,

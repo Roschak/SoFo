@@ -33,7 +33,7 @@
 | 23 Client Access | client portal (Sesi #6) | ✅ DONE | ✅ | ✅ | ClientPortalView read-only utk CLIENT/GUEST |
 | 24 Hardening | rate limit + health | ✅ DONE | ✅ | ✅ | E2E 112/112 + 15/15 + 197/197 unit |
 | 25 Production Readiness | CI + backup + release + runbook | ✅ DONE | ✅ | ✅ | Sesi #7: RUNBOOK + README; quality+release workflow; APK fisik OK |
-| 26 Beta | BETA 1 dibangun | 🟨 IN PROGRESS | — | — | Sesi #7: APK release signed v0.1.0-beta.1; panduan & tester list di `docs/notes/06-BETA-PHASE26.md`; backend beta = keputusan owner |
+| 26 Beta | BETA 2 siap didistribusikan | 🟨 IN PROGRESS | ✅ | ✅ | Sesi #8: keputusan owner = Opsi A (WiFi lokal); APK beta.2 signed + Server URL in-app + CORS multi-origin; server beta live `192.168.68.107:4001`; sisa: tester list, kirim APK, tag `v0.1.0-beta.2` (EXE CI) |
 | 27 Feedback Loop | feedback/ | ✅ DONE | ✅ | ✅ | Sesi #7; Feedback+Vote, UI, notif, audit; recurrence kalender jg selesai |
 
 ## MVP P0 & P1 Acceptance (PRD §140) — sisi API & Web
@@ -60,15 +60,16 @@
 20. [x] Akses data sesuai permission — PermissionGuard di semua endpoint workspace
 21. [x] Landing page & Product Portfolio — animasi scroll memukau, top progress bar, interactive mockups
 
-## Verifikasi Terakhir (2026-09-26 — Sesi #7)
+## Verifikasi Terakhir (2026-09-28 — Sesi #8)
 
 | Check | Hasil |
 |---|---|
-| Unit tests | 224/224 pass (127 API + 89 web + 8 shared) |
-| HTTP E2E (`test/http-smoke.mjs`) | 134/134 pass (+22 recurrence & feedback) |
-| Realtime E2E (`test/realtime-smoke.mjs`) | 15/15 pass (100% acceptance) |
+| Unit tests | 236/236 pass (127 API + 101 web + 8 shared) |
+| HTTP E2E (`test/http-smoke.mjs`) | 134/134 pass — dijalankan ulang di server beta live |
+| Realtime E2E (`test/realtime-smoke.mjs`) | 15/15 pass — di server beta live |
 | Lint / typecheck / build | 0 error across all workspaces |
-| Migration baru | recurrence + feedback_loop applied |
+| APK beta.2 | release signed 3.3 MB + debug 4.2 MB, apksigner OK, versionCode 2 |
+| Server beta | LIVE `http://192.168.68.107:4001` (Opsi A), health OK via LAN IP |
 | Rekap Sesi #7 | `docs/notes/05-SESI-7-REKAP.md` |
 
 ### Historis — Sesi #6 (2026-09-22)

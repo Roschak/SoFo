@@ -28,4 +28,15 @@ export const env = {
   get corsOrigin(): string {
     return process.env.CORS_ORIGIN ?? 'http://localhost:5173';
   },
+  /**
+   * CORS origins as a list — CORS_ORIGIN accepts a comma-separated list so the
+   * Capacitor Android shell (custom origin) and LAN testers can call the API
+   * alongside the Vite dev server (Phase 26 beta, PRD §102).
+   */
+  get corsOrigins(): string[] {
+    return this.corsOrigin
+      .split(',')
+      .map((value) => value.trim())
+      .filter((value) => value.length > 0);
+  },
 };

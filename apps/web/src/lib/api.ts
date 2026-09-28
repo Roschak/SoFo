@@ -1,6 +1,6 @@
 import type { ApiError } from './types';
+import { resolveApiBase } from './server-config';
 
-const API_BASE = '/api/v1';
 
 export class ApiRequestError extends Error {
   readonly code: string;
@@ -27,7 +27,8 @@ export async function api<T>(path: string, options: RequestOptions): Promise<T> 
   if (options.workspaceId) headers['x-workspace-id'] = options.workspaceId;
   if (options.body !== undefined) headers['Content-Type'] = 'application/json';
 
-  const response = await fetch(`${API_BASE}${path}`, {
+  // Resolved per call so a changed server URL applies immediately (no reload).
+  const response = await fetch(`${resolveApiBase()}${path}`, {
     method: options.method,
     headers,
     body: options.body === undefined ? undefined : JSON.stringify(options.body),

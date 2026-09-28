@@ -5,6 +5,57 @@
 
 ---
 
+## Sesi #8 — 2026-09-28 — Beta 2: Server URL in-app + Opsi A (WiFi lokal) + server live — SELESAI ✅
+
+> Owner menyetujui SEMUA langkah di awal sesi ("setuju semuanya, proceed").
+> Keputusan backend beta (PRD §102): **Opsi A — laptop owner jadi server via WiFi lokal**.
+
+### Yang sudah selesai
+- **Ditemukan blocker beta.1**: `capacitor.config.ts` masih `http://10.0.2.2:5173`
+  (emulator-only) — APK beta.1 tidak akan bisa konek ke server di HP tester asli.
+- **Server URL configurable in-app** (semua ADDITIVE):
+  - `web/src/lib/server-config.ts`: load/save/validate/reset URL (localStorage),
+    `isNativePlatform()`, `resolveApiBase()` (web tetap same-origin `/api/v1`),
+    `probeServer()` via `/api/v1/health`.
+  - `lib/api.ts` + `lib/socket.ts` memakai base dari server-config (native only);
+    per-request resolve → ganti server langsung efektif tanpa reload.
+  - AuthScreen: bagian **Server** (hanya native) — Simpan & uji koneksi
+    ("Terhubung (n ms)" / gagal → `navigator.vibrate`), tombol Pakai default.
+  - 12 unit test baru (`server-config.spec.ts`) → web 101/101.
+- **CORS multi-origin**: `CORS_ORIGIN` kini comma-separated list; `env.corsOrigins`
+  dipakai `enableCors` (`.env` + `.env.example` diupdate). Preflight dari origin
+  APK (`https://localhost`) terverifikasi 204.
+- **Rebuild APK beta.2** (`v0.1.0-beta.2`, versionCode 1→2): release signed
+  3.3 MB + debug 4.2 MB, `apksigner` OK (CN=SOFO Souloffice, SHA-256 `9355dad6…`
+  — signature konsisten dgn beta.1 → upgrade install mulus). Artefak:
+  `data/sofo-v0.1.0-beta.2-*.apk` (beta.1 disusulkan).
+- **Server beta LIVE** (Sesi #8): `sofo-db` distart, API `dist/main.js` di
+  `0.0.0.0:4001` (nohup, log `data/beta-api.log`), health OK via LAN IP
+  `http://192.168.68.107:4001`.
+- **Verifikasi ulang penuh di server beta live**: unit 236/236 (127 API + 101 web
+  + 8 shared), lint/typecheck 0, HTTP E2E **134/134**, realtime **15/15**.
+- Tauri `version` → `0.1.0-beta.2` (konsistensi EXE via CI).
+
+### Keputusan / temuan
+- Beta.1 TIDAK layak dibagikan ke tester (URL emulator) — beta.2 wajib dipakai.
+- Firewall Windows utk port 4001 butuh elevasi admin (dibatalkan sesuai preseden
+  Sesi #6): saat tester pertama konek, owner klik **Allow** pada prompt Node.js.
+- IP LAN owner saat ini: `192.168.68.107` (DHCP — bisa berubah; tester cukup
+  ubah URL di layar Server, tanpa rebuild).
+- API listen `0.0.0.0` default Nest — tanpa perubahan kode.
+
+### Yang BELUM selesai (lanjutkan di sini)
+- Push main + tag `v0.1.0-beta.2` → EXE Windows via CI (dilakukan di akhir sesi).
+- Isi daftar tester (06-BETA §4) + kirim APK beta.2 + link formulir feedback.
+- Sisa opsional: Redis adapter, FCM push, i18n — lihat `03-BELUM-DIKERJAKAN.md`.
+
+### Peringatan
+- Server beta hanya hidup saat owner menjalankannya (lihat checklist 06-BETA §8
+  untuk perintah start). Smoke berulang cepat → 429 rate limit (restart API).
+- Prisma generate EPERM jika server jalan (Windows) — matikan dulu (preseden Sesi #2f).
+
+---
+
 ## Sesi #7 — 2026-09-26 — Recurrence Kalender + Feedback Loop (Phase 27) + Runbook — SELESAI ✅
 
 > Rekap penuh: `docs/notes/05-SESI-7-REKAP.md`. Ringkasan:
