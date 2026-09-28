@@ -65,15 +65,15 @@ export class RealtimeGateway implements OnGatewayInit, OnGatewayConnection, OnGa
         next(new Error('UNAUTHENTICATED: missing token'));
         return;
       }
-      this.authenticationService
-        .validateSession(token)
-        .then((user) => {
-          client.data = { userId: user.id };
-          next();
-        })
-        .catch(() => {
-          next(new Error('UNAUTHENTICATED: session is invalid or expired'));
-        });
+    this.authenticationService
+      .validateSession(token)
+      .then((user) => {
+        client.data = { userId: user.id, displayName: user.displayName };
+        next();
+      })
+      .catch(() => {
+        next(new Error('UNAUTHENTICATED: session is invalid or expired'));
+      });
     });
     setSocketServer(this.server);
     this.logger.log('Realtime gateway initialized');
