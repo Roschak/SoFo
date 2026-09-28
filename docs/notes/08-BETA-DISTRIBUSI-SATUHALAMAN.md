@@ -38,13 +38,13 @@
 
 ## 🐞 Cara melapor
 
-1. **Menu Feedback di aplikasi** (paling disukai — otomatis masuk sistem)
-2. **Formulir feedback**: `<LINK_FORM>` — untuk penilaian & detail bug
-3. Darurat: chat langsung ke owner + screenshot + **jam kejadian**
+1. **Menu Feedback di aplikasi** (paling disukai — otomatis masuk sistem, kamu
+   dapat notifikasi jawabannya)
+2. Chat langsung ke owner + screenshot + **jam kejadian**
 
 ## ⚠️ Yang perlu diketahui
 
-- Server = laptop owner: **hanya hidup saat owner menyalakannya** — kalau tidak konek, tunggu/bisikkan owner
+- Firewall port 4001 sudah diizinkan di laptop owner — tester langsung bisa konek
 - Data beta **bisa hilang** kapan saja — jangan simpan data penting
 - Status koneksi realtime terlihat di **pojok kiri bawah** aplikasi
 - Login maksimal 20×/5 menit per IP — jangan spam

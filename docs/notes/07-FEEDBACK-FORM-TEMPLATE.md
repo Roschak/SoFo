@@ -91,17 +91,20 @@ Semua data di beta ini adalah data uji; jangan isi data pribadi nyata.
 ```
 Halo! Kamu terpilih jadi tester beta pertama SOFO 🎉
 
-1. Pastikan HP terhubung ke WiFi yang sama dgn aku (server ada di laptop-ku)
-2. Install APK terlampir (izinkan "install dari sumber tidak dikenal")
-3. Buka SOFO → di layar login, bagian Server pastikan:
+1. Unduh APK + panduan:
+   https://github.com/Roschak/SoFo/releases/tag/v0.1.0-beta.2
+   (ambil sofo-v0.1.0-beta.2-release.apk)
+2. Sambungkan HP ke WiFi yang sama dengan laptopku
+3. Install APK (izinkan "install dari sumber tidak dikenal")
+4. Buka SOFO → di layar login bagian Server pastikan:
    http://192.168.68.107:4001 → tap "Simpan & uji koneksi"
    sampai muncul "Terhubung"
-4. Daftar akun (pakai email palsu boleh) dan coba semua menu
-5. Isi formulir feedback ini: <LINK_FORM>
-   + kirim feedback langsung dari menu Feedback di aplikasi ya
+5. Daftar akun (email palsu boleh) dan coba semua menu
+6. Ada bug/ide? Kirim lewat menu Feedback di dalam aplikasi —
+   kamu bakal dapat notifikasi jawabannya langsung
 
-Catatan: ini data uji, jangan isi data pribadi nyata.
-Aku aktifkan server pas jam <JAM>, kabari kalau gagal konek!
+Server aktif selagi laptopku nyala — kalau gagal konek, kabari aku.
+Data uji: jangan isi data pribadi nyata. Terima kasih! 🙏
 ```
 
 ---
