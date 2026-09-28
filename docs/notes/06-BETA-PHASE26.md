@@ -127,7 +127,10 @@ Kirim juga link formulir feedback (bagian 6).
 - [x] Known issue didokumentasikan (bagian 7)
 - [ ] **Owner**: jalankan API saat sesi beta (`npm run build -w @sofo/api && node apps/api/dist/main.js` — DB Docker `sofo-db` harus hidup) + izinkan Node.js di firewall saat prompt Windows pertama
 - [ ] Isi daftar tester (bagian 4) + kirim APK beta.2 + link formulir feedback
-- [ ] EXE Windows: push tag `v0.1.0-beta.2` di GitHub → ambil artifact CI
+- [x] EXE Windows: **SUDAH DIBANGUN via CI** — run `v0.1.0-beta.2c` sukses,
+      artifact `sofo-windows-exe` (4.7 MB) di tab Actions GitHub (unduh owner).
+      Catatan: artifact APK release CI tanpa signature (keystore secrets belum
+      diset di GitHub) — **pakai APK beta.2 yang dibangun lokal** (sudah signed).
 
 ## 9. Rollback (PRD §133)
 

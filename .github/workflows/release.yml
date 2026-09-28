@@ -106,7 +106,8 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: sofo-android-apk-release
-          path: apps/web/android/app/build/outputs/apk/release/app-release.apk
+          # Unsigned builds emit app-release-unsigned.apk — match both names.
+          path: apps/web/android/app/build/outputs/apk/release/app-release*.apk
           retention-days: 14
 
       - name: Upload debug APK artifact
