@@ -5,6 +5,39 @@
 
 ---
 
+## Sesi #8 lanjutan — 2026-09-28 — Beta flow E2E + template formulir feedback — SELESAI ✅
+
+### Yang sudah selesai
+- **`apps/api/test/beta-flow.mjs`** (BARU, 46 checks): mensimulasikan perjalanan
+  tester 06-BETA §5 secara end-to-end — register/login, 2 workspace (mode),
+  invite+role (3 user: tester/friend→MANAGER/colleague MEMBER), chat realtime
+  2 socket (kirim/edit/reply/hapus broadcast), file, meeting+join+live notes,
+  kanban task, kalender **recurrence WEEKLY** + reminders, presensi +
+  request/approve + self-approval ban, moderasi COMMUNITY, feedback loop penuh
+  (submit→vote→decide→**notif loop tertutup**), logout→login ulang.
+  Jalankan: `BASE_URL=http://192.168.68.107:4001/api/v1 \
+  WS_URL=http://192.168.68.107:4001 node apps/api/test/beta-flow.mjs`.
+- **Hasil: 46/46 PASSED via server LAN** `http://192.168.68.107:4001` —
+  alur tester beta terverifikasi penuh (dijalankan 4x iterasi perbaikan script).
+- **Template formulir feedback**: `docs/notes/07-FEEDBACK-FORM-TEMPLATE.md`
+  (Google Forms siap-copy + chat broadcast WA/Telegram + triage owner).
+
+### Temuan saat verifikasi (bukan bug API — semua perilaku benar)
+- `MEMBER` tidak punya `message.delete` & `request.create` hanya STAFF/MEMBER —
+  sesuai permission matrix; script beta-flow menyesuaikan (pengaju = MEMBER).
+- Live note hanya untuk participant/host → tester harus "Ikut" meeting dulu
+  (persis alur UI) — didokumentasikan di script.
+- Notifikasi `feedback.decided` dibuat listener async → butuh ±1 detik;
+  script memakai polling 6×400ms (realistis dgn UI yang poll).
+- Shape API terkonfirmasi ulang: invite `{success}` (memberId via list),
+  calendar `{items}`, notifications `{items}`, `MessageDeletedEvent.messageId`.
+
+### Yang BELUM selesai
+- Isi daftar tester + kirim APK beta.2 + link form (owner, lihat §4 06-BETA).
+- Status CI run `v0.1.0-beta.2` (EXE) — dicek owner di tab Actions.
+
+---
+
 ## Sesi #8 — 2026-09-28 — Beta 2: Server URL in-app + Opsi A (WiFi lokal) + server live — SELESAI ✅
 
 > Owner menyetujui SEMUA langkah di awal sesi ("setuju semuanya, proceed").

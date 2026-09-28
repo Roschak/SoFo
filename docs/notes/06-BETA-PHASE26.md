@@ -93,7 +93,8 @@ Kirim juga link formulir feedback (bagian 6).
 ## 6. Loop feedback beta (PRD §98) — alur operasional
 
 1. Tester menemukan bug/ide → kirim lewat **menu Feedback** di aplikasi
-   (atau formulir: bisa pakai Google Forms sederhana — link diisi owner).
+   (atau formulir: template siap-copy di `07-FEEDBACK-FORM-TEMPLATE.md`
+   — owner tinggal pindahkan ke Google Forms dan isi link di §4).
 2. OWNER/ADMIN buka menu Feedback → urutkan (OPEN dulu, vote terbanyak).
 3. Putuskan tiap item: REVIEWED / ACCEPTED (masuk backlog) / REJECTED (+catatan).
 4. Tester menerima notifikasi keputusan otomatis — loop tertutup.
