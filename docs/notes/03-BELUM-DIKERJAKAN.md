@@ -45,9 +45,10 @@
 - [ ] Push notification (FCM) & reminder push (PRD §89 lanjutan).
 - [ ] i18n penuh ID/EN (PRD §129) — arsitektur sudah mendukung.
 - [~] **Phase 26 BETA** — Sesi #8 (2026-09-28): keputusan owner = **Opsi A
-      (WiFi lokal)**; APK **beta.2** (signed, versionCode 2) dibangun dengan
-      **Server URL configurable in-app** + CORS multi-origin; server beta LIVE di
-      `http://192.168.68.107:4001`; verifikasi hijau (236 unit + 134 HTTP + 15
-      realtime). Sisa (butuh owner/manual): izinkan Node.js di firewall saat
-      prompt pertama, isi daftar tester (06-BETA §4), kirim APK beta.2,
-      tag `v0.1.0-beta.2` utk EXE via CI.
+      (WiFi lokal)**; APK **beta.2** (signed) + Server URL in-app + CORS
+      multi-origin; server beta LIVE `http://192.168.68.107:4001`; verifikasi
+      hijau (236 unit + 134 HTTP + 15 realtime + beta-flow 46); regression via
+      LAN 195/195; **CI + Release workflow hijau penuh; GitHub Release resmi
+      dipublikasikan**: https://github.com/Roschak/SoFo/releases/tag/v0.1.0-beta.2
+      Sisa (owner): isi daftar tester, bagikan link Release + link form,
+      izinkan Node.js di firewall saat prompt pertama.

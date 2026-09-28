@@ -5,6 +5,33 @@
 
 ---
 
+## Sesi #8 lanjutan 3 — 2026-09-28 — GitHub Release resmi v0.1.0-beta.2 — SELESAI ✅
+
+### Yang sudah selesai
+- **Tag dirapikan**: tag gagal (`2`, `2b`, `2c`) dihapus lokal+remote;
+  `v0.1.0-beta.2` di-re-tag ke commit final `6a7eefc` (semua fix CI ikut).
+- **Run Release final SUKSES** (run 36387610291, 6m20s) — ketiga artifact
+  ter-upload: `sofo-windows-exe` (4.7 MB), `sofo-android-apk-release` (3.0 MB,
+  glob `app-release*.apk` menangkap nama unsigned), `sofo-android-apk-debug`
+  (3.9 MB).
+- **GitHub Release resmi dipublikasikan** (bukan draft):
+  https://github.com/Roschak/SoFo/releases/tag/v0.1.0-beta.2
+  Aset: APK release **signed** + APK debug + panduan satu halaman.
+  Catatan rilis lengkap (isi beta, peringatan, hasil verifikasi).
+- Docs diupdate (06-BETA §4/§8, 03-BELUM).
+
+### Catatan
+- APK di aset Release = build lokal yang **signed** (signature `9355dad6…`)
+  — ini yang dipakai tester; artifact CI release unsigned (keystore tidak
+  disimpan di GitHub) hanya untuk arsip.
+- Body catatan rilis disimpan di `data/release-notes-v0.1.0-beta.2.md`.
+
+### Yang tersisa utk owner
+- Bagikan link Release + link formulir feedback ke tester (06-BETA §4).
+- Izinkan Node.js di firewall saat prompt Windows pertama kali tester konek.
+
+---
+
 ## Sesi #8 lanjutan 2 — 2026-09-28 — Regression penuh via LAN + fix CI/Release — SELESAI ✅
 
 ### Regression penuh di server LAN (semua hijau, 195/195)

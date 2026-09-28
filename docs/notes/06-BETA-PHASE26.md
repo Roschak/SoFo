@@ -71,8 +71,11 @@ Minimal 5–10 tester untuk beta terbatas, dari tiap segmen target user:
 | Komunitas | _(isi)_ | | release | ⬜ |
 | Enterprise/staff | _(isi)_ | | release | ⬜ |
 
-Kanal distribusi sederhana: **Google Drive / WhatsApp / Telegram** — cukup
-kirim file APK langsung ke tester (beta terbatas tidak butuh Play Store).
+Kanal distribusi (pilih salah satu):
+1. **GitHub Release (resmi, siap pakai)**: https://github.com/Roschak/SoFo/releases/tag/v0.1.0-beta.2
+   — berisi APK release signed + APK debug + panduan satu halaman. Tester tinggal unduh.
+2. Google Drive / WhatsApp / Telegram — kirim file APK langsung ke tester
+   (beta terbatas tidak butuh Play Store).
 Kirim juga link formulir feedback (bagian 6).
 
 ## 5. Skenario uji yang diminta ke tester (PRD §138 ringkas)
@@ -126,11 +129,13 @@ Kirim juga link formulir feedback (bagian 6).
 - [x] Menu Feedback siap menerima laporan tester
 - [x] Known issue didokumentasikan (bagian 7)
 - [ ] **Owner**: jalankan API saat sesi beta (`npm run build -w @sofo/api && node apps/api/dist/main.js` — DB Docker `sofo-db` harus hidup) + izinkan Node.js di firewall saat prompt Windows pertama
-- [ ] Isi daftar tester (bagian 4) + kirim APK beta.2 + link formulir feedback
-- [x] EXE Windows: **SUDAH DIBANGUN via CI** — run `v0.1.0-beta.2c` sukses,
-      artifact `sofo-windows-exe` (4.7 MB) di tab Actions GitHub (unduh owner).
-      Catatan: artifact APK release CI tanpa signature (keystore secrets belum
-      diset di GitHub) — **pakai APK beta.2 yang dibangun lokal** (sudah signed).
+- [ ] Isi daftar tester (bagian 4) + bagikan link GitHub Release + link formulir feedback
+- [x] EXE Windows: **CI Release SUKSES** — tag `v0.1.0-beta.2` (run 36387610291),
+      ketiga artifact ter-upload: `sofo-windows-exe` (4.7 MB), APK release
+      (unsigned), APK debug. **APK untuk tester tetap yang ber-signature** —
+      tersedia sebagai aset GitHub Release resmi.
+- [x] **GitHub Release resmi dipublikasikan** (APK signed release + debug +
+      panduan satu halaman): https://github.com/Roschak/SoFo/releases/tag/v0.1.0-beta.2
 
 ## 9. Rollback (PRD §133)
 
