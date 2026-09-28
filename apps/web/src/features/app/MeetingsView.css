@@ -229,3 +229,68 @@
     position: static;
   }
 }
+
+/* ---------------- Voice chat (Discord-style in-app call) ---------------- */
+
+.meetings__voice {
+  border: 1px solid var(--sofo-ink-700);
+  border-radius: var(--sofo-r-md);
+  padding: var(--sofo-sp-3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sofo-sp-3);
+  background: rgb(79 70 229 / 0.06);
+}
+
+.meetings__voice-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sofo-sp-2);
+}
+
+.meetings__voice-error {
+  font-size: var(--sofo-fs-sm);
+  color: var(--sofo-danger);
+}
+
+.meetings__voice-state {
+  font-size: var(--sofo-fs-sm);
+  color: var(--sofo-text-500);
+}
+
+.meetings__voice-peers {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sofo-sp-2);
+}
+
+.meetings__voice-peer {
+  display: flex;
+  align-items: center;
+  gap: var(--sofo-sp-2);
+}
+
+.meetings__voice-name {
+  font-size: var(--sofo-fs-sm);
+  font-weight: 600;
+  color: var(--sofo-text-100);
+}
+
+.meetings__voice-video {
+  width: 160px;
+  aspect-ratio: 4 / 3;
+  border-radius: var(--sofo-r-md);
+  background: var(--sofo-ink-950);
+  object-fit: cover;
+}
+
+.meetings__voice-video--self {
+  width: 120px;
+}
+
+.meetings__voice-audio {
+  display: none;
+}

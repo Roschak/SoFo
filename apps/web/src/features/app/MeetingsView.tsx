@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { useAuth } from '../../state/AuthContext';
 import { useWorkspace } from '../../state/WorkspaceContext';
 import { useMeetings } from '../../state/MeetingContext';
+import { useVoice } from '../../state/VoiceContext';
 import { Button } from '../../components/ui/Button';
 import { Field } from '../../components/ui/Field';
 import { Modal } from '../../components/ui/Modal';
@@ -15,6 +16,57 @@ import { useScrollReveal } from '../../hooks/useScrollReveal';
 import { MEETING_STATUS_LABEL } from '../../lib/types';
 import type { Meeting } from '../../lib/types';
 import './MeetingsView.css';
+
+/** One remote participant tile: audio sink + state badges. */
+function VoicePeerTile({
+  socketId,
+  displayName,
+  muted,
+  cameraOn,
+  connectionState,
+  stream,
+}: {
+  socketId: string;
+  displayName: string;
+  muted: boolean;
+  cameraOn: boolean;
+  connectionState: string;
+  stream: MediaStream | null;
+}) {
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+
+  useEffect(() => {
+    if (audioRef.current && stream) {
+      audioRef.current.srcObject = stream;
+    }
+    if (videoRef.current && stream) {
+      videoRef.current.srcObject = stream;
+    }
+  }, [stream]);
+
+  return (
+    <li className="meetings__voice-peer" data-socket={socketId}>
+      {cameraOn && stream ? (
+        <video ref={videoRef} autoPlay playsInline className="meetings__voice-video" />
+      ) : (
+        <Avatar name={displayName} size="md" />
+      )}
+      <div>
+        <p className="meetings__voice-name">{displayName}</p>
+        <p className="meetings__voice-state">
+          {connectionState === 'connected' || connectionState === 'completed'
+            ? muted
+              ? '🔇 mic mati'
+              : '🎙️ bicara'
+            : `⏳ ${connectionState}`}
+          {cameraOn ? ' · 📷' : ''}
+        </p>
+      </div>
+      <audio ref={audioRef} autoPlay playsInline className="meetings__voice-audio" />
+    </li>
+  );
+}
 
 function statusClass(status: Meeting['status']): string {
   if (status === 'ACTIVE') return 'meetings__badge--active';
@@ -50,6 +102,15 @@ export function MeetingsView() {
   const [noteDraft, setNoteDraft] = useState('');
   const [noteSaved, setNoteSaved] = useState(false);
   const noteTimerRef = useRef<number | null>(null);
+  const voice = useVoice();
+  const localVideoRef = useRef<HTMLVideoElement | null>(null);
+
+  // Live local camera preview while the camera is on.
+  useEffect(() => {
+    if (localVideoRef.current) {
+      localVideoRef.current.srcObject = voice.getLocalStream();
+    }
+  }, [voice.state.selfCameraOn, voice.state.inCall]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const myUserId = session?.user.id;
   const myRole = members.find((member) => member.user.id === myUserId)?.role;
@@ -250,6 +311,84 @@ export function MeetingsView() {
                   {MEETING_STATUS_LABEL[activeMeeting.status]}
                 </span>
               </header>
+
+              {/* Voice chat — Discord-style in-app call (beta: mesh audio + camera). */}
+              <div className="meetings__voice" aria-label="Voice chat meeting">
+                {!voice.state.inCall ? (
+                  <div className="meetings__voice-actions">
+                    <Button
+                      size="sm"
+                      onClick={() =>
+                        void voice.join(activeWorkspace?.id ?? '', activeMeeting.id, false)
+                      }
+                    >
+                      🎙️ Ikut voice
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() =>
+                        void voice.join(activeWorkspace?.id ?? '', activeMeeting.id, true)
+                      }
+                    >
+                      📷 Ikut dengan kamera
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="meetings__voice-actions">
+                    <Button
+                      size="sm"
+                      variant={voice.state.selfMuted ? 'danger' : 'ghost'}
+                      onClick={() => voice.toggleMute()}
+                    >
+                      {voice.state.selfMuted ? '🔇 Mic mati' : '🎙️ Mic hidup'}
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant={voice.state.selfCameraOn ? 'primary' : 'ghost'}
+                      onClick={() => void voice.toggleCamera()}
+                    >
+                      {voice.state.selfCameraOn ? '📷 Kamera hidup' : '📷 Kamera mati'}
+                    </Button>
+                    <Button size="sm" variant="danger" onClick={() => void voice.leave()}>
+                      ⎋ Keluar voice
+                    </Button>
+                  </div>
+                )}
+                {voice.state.micError ? (
+                  <p className="meetings__voice-error" role="alert">
+                    Mic/kamera ditolak: {voice.state.micError}
+                  </p>
+                ) : null}
+                {voice.state.selfCameraOn ? (
+                  <video
+                    ref={localVideoRef}
+                    autoPlay
+                    playsInline
+                    muted
+                    className="meetings__voice-video meetings__voice-video--self"
+                  />
+                ) : null}
+                {voice.state.peers.length > 0 ? (
+                  <ul className="meetings__voice-peers">
+                    {voice.state.peers.map((peer) => (
+                      <VoicePeerTile
+                        key={peer.socketId}
+                        socketId={peer.socketId}
+                        displayName={peer.displayName}
+                        muted={peer.muted}
+                        cameraOn={peer.cameraOn}
+                        connectionState={peer.connectionState}
+                        stream={peer.stream}
+                      />
+                    ))}
+                  </ul>
+                ) : voice.state.inCall ? (
+                  <p className="meetings__voice-state">
+                    Terhubung ke voice room — menunggu peserta lain ikut…
+                  </p>
+                ) : null}
+              </div>
               {canWriteNotes ? (
                 <>
                   <textarea

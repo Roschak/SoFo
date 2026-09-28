@@ -8,6 +8,11 @@ import type {
   PresenceUpdatedEvent,
   TypingPayload,
   TypingUpdatedEvent,
+  VoiceIcePayload,
+  VoiceJoinPayload,
+  VoiceLeftEvent,
+  VoiceParticipantsEvent,
+  VoiceSdpPayload,
   WorkspaceJoinPayload,
 } from '@sofo/shared';
 import { isNativePlatform, loadServerUrl } from './server-config';
@@ -52,6 +57,54 @@ export function bindRealtimeHandlers(socket: Socket, handlers: RealtimeHandlers)
   socket.on('notification.read', handlers.onNotificationRead);
   socket.on('disconnect', handlers.onDisconnected);
   socket.on('reconnect', handlers.onReconnected);
+}
+
+/* --------------------------- voice chat (WebRTC) --------------------------- */
+
+export interface VoiceHandlers {
+  onParticipants: (event: VoiceParticipantsEvent) => void;
+  onSdp: (event: { fromSocketId: string; sdp: string; type: 'offer' | 'answer' }) => void;
+  onIce: (event: {
+    fromSocketId: string;
+    candidate: string;
+    sdpMid: string | null;
+    sdpMLineIndex: number | null;
+  }) => void;
+  onLeft: (event: VoiceLeftEvent) => void;
+}
+
+export function bindVoiceHandlers(socket: Socket, handlers: VoiceHandlers): void {
+  socket.on('voice.participants', handlers.onParticipants);
+  socket.on('voice.sdp', handlers.onSdp);
+  socket.on('voice.ice', handlers.onIce);
+  socket.on('voice.left', handlers.onLeft);
+}
+
+export function emitVoiceJoin(socket: Socket, payload: VoiceJoinPayload): void {
+  socket.emit('voice.join', payload);
+}
+
+export function emitVoiceLeave(socket: Socket, payload: VoiceJoinPayload): void {
+  socket.emit('voice.leave', payload);
+}
+
+export function emitVoiceMute(socket: Socket, payload: VoiceJoinPayload & { muted: boolean }): void {
+  socket.emit('voice.mute', payload);
+}
+
+export function emitVoiceCamera(
+  socket: Socket,
+  payload: VoiceJoinPayload & { cameraOn: boolean },
+): void {
+  socket.emit('voice.camera', payload);
+}
+
+export function emitVoiceSdp(socket: Socket, payload: VoiceSdpPayload): void {
+  socket.emit('voice.sdp', payload);
+}
+
+export function emitVoiceIce(socket: Socket, payload: VoiceIcePayload): void {
+  socket.emit('voice.ice', payload);
 }
 
 export function joinWorkspace(socket: Socket, payload: WorkspaceJoinPayload): void {

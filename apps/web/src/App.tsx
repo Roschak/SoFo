@@ -6,6 +6,7 @@ import { AuthProvider, useAuth } from './state/AuthContext';
 import { WorkspaceProvider } from './state/WorkspaceContext';
 import { MeetingProvider } from './state/MeetingContext';
 import { NotificationProvider } from './state/NotificationContext';
+import { VoiceProvider } from './state/VoiceContext';
 
 function Gate() {
   const { session } = useAuth();
@@ -29,11 +30,13 @@ function Gate() {
   if (session) {
     return (
       <WorkspaceProvider>
-        <NotificationProvider>
-          <MeetingProvider>
-            <ChatShell />
-          </MeetingProvider>
-        </NotificationProvider>
+        <VoiceProvider>
+          <NotificationProvider>
+            <MeetingProvider>
+              <ChatShell />
+            </MeetingProvider>
+          </NotificationProvider>
+        </VoiceProvider>
       </WorkspaceProvider>
     );
   }

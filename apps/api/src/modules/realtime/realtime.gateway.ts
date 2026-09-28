@@ -14,15 +14,22 @@ import {
   PresenceUpdatedEvent,
   TypingPayload,
   TypingUpdatedEvent,
+  VoiceIcePayload,
+  VoiceJoinPayload,
+  VoiceLeftEvent,
+  VoiceParticipant,
+  VoiceSdpPayload,
+  VoiceParticipantsEvent,
   WorkspaceJoinPayload,
   userRoom,
+  voiceRoom,
   workspaceRoom,
 } from './realtime.types';
 import { RealtimeService } from './realtime.service';
 import { setSocketServer } from '../../infrastructure/realtime/socket-server';
 
 interface AuthenticatedSocket extends Socket {
-  data: { userId: string };
+  data: { userId: string; displayName?: string };
 }
 
 /**
@@ -38,6 +45,10 @@ export class RealtimeGateway implements OnGatewayInit, OnGatewayConnection, OnGa
   private readonly logger = new Logger(RealtimeGateway.name);
   /** socketId → workspaceIds, because socket.io clears rooms before disconnect fires. */
   private readonly joinedWorkspaces = new Map<string, Set<string>>();
+  /** meetingId → (socketId → participant state) for active voice calls. */
+  private readonly voiceParticipants = new Map<string, Map<string, VoiceParticipant>>();
+  /** socketId → meetingIds this socket's voice sessions belong to. */
+  private readonly joinedVoiceMeetings = new Map<string, Set<string>>();
 
   constructor(
     private readonly authenticationService: AuthenticationService,
@@ -82,6 +93,12 @@ export class RealtimeGateway implements OnGatewayInit, OnGatewayConnection, OnGa
     const userId = client.data?.userId;
     const workspaces = this.joinedWorkspaces.get(client.id);
     this.joinedWorkspaces.delete(client.id);
+    // Abrupt disconnect during a voice call: drop the participant so the
+    // remaining peers tear the RTCPeerConnections down immediately.
+    for (const meetingId of this.joinedVoiceMeetings.get(client.id) ?? []) {
+      await this.dropVoiceParticipant(meetingId, client.id, userId);
+    }
+    this.joinedVoiceMeetings.delete(client.id);
     if (!userId || !workspaces) {
       return;
     }
@@ -138,6 +155,155 @@ export class RealtimeGateway implements OnGatewayInit, OnGatewayConnection, OnGa
   @SubscribeMessage('typing.stop')
   async handleTypingStop(client: AuthenticatedSocket, payload: TypingPayload) {
     return this.handleTyping(client, payload, false);
+  }
+
+  /* --------------------------- voice chat (WebRTC signaling) --------------------------- */
+
+  @SubscribeMessage('voice.join')
+  async handleVoiceJoin(client: AuthenticatedSocket, payload: VoiceJoinPayload) {
+    const userId = client.data.userId;
+    try {
+      await this.authorizationService.assertPermission(userId, payload.workspaceId, 'meeting.join');
+    } catch {
+      return { code: 'FORBIDDEN', message: 'Access denied' };
+    }
+
+    const room = voiceRoom(payload.meetingId);
+    await client.join(room);
+    this.trackVoiceJoin(client.id, payload.meetingId);
+
+    const participants = this.voiceParticipants.get(payload.meetingId) ?? new Map();
+    participants.set(client.id, {
+      socketId: client.id,
+      userId,
+      displayName: client.data.displayName ?? 'Anggota',
+      muted: false,
+      cameraOn: false,
+    });
+    this.voiceParticipants.set(payload.meetingId, participants);
+
+    const event: VoiceParticipantsEvent = {
+      workspaceId: payload.workspaceId,
+      meetingId: payload.meetingId,
+      participants: [...participants.values()],
+    };
+    this.server.to(room).emit('voice.participants', event);
+    return { code: 'OK', participants: event.participants };
+  }
+
+  @SubscribeMessage('voice.leave')
+  async handleVoiceLeave(client: AuthenticatedSocket, payload: VoiceJoinPayload) {
+    const room = voiceRoom(payload.meetingId);
+    await client.leave(room);
+    this.untrackVoice(client.id, payload.meetingId);
+    await this.dropVoiceParticipant(payload.meetingId, client.id, client.data.userId);
+    return { code: 'OK' };
+  }
+
+  @SubscribeMessage('voice.mute')
+  async handleVoiceMute(
+    client: AuthenticatedSocket,
+    payload: VoiceJoinPayload & { muted: boolean },
+  ) {
+    return this.updateVoiceState(payload, client, (p) => ({ ...p, muted: payload.muted }));
+  }
+
+  @SubscribeMessage('voice.camera')
+  async handleVoiceCamera(
+    client: AuthenticatedSocket,
+    payload: VoiceJoinPayload & { cameraOn: boolean },
+  ) {
+    return this.updateVoiceState(payload, client, (p) => ({ ...p, cameraOn: payload.cameraOn }));
+  }
+
+  /** SDP offer/answer relay — signaling only, the server never inspects media. */
+  @SubscribeMessage('voice.sdp')
+  async handleVoiceSdp(client: AuthenticatedSocket, payload: VoiceSdpPayload) {
+    if (!(await this.isVoicePeer(client, payload.meetingId))) {
+      return { code: 'FORBIDDEN', message: 'Not in this voice call' };
+    }
+    this.server.to(payload.targetSocketId).emit('voice.sdp', {
+      fromSocketId: client.id,
+      sdp: payload.sdp,
+      type: payload.type,
+    });
+    return { code: 'OK' };
+  }
+
+  /** ICE candidate relay. */
+  @SubscribeMessage('voice.ice')
+  async handleVoiceIce(client: AuthenticatedSocket, payload: VoiceIcePayload) {
+    if (!(await this.isVoicePeer(client, payload.meetingId))) {
+      return { code: 'FORBIDDEN', message: 'Not in this voice call' };
+    }
+    this.server.to(payload.targetSocketId).emit('voice.ice', {
+      fromSocketId: client.id,
+      candidate: payload.candidate,
+      sdpMid: payload.sdpMid,
+      sdpMLineIndex: payload.sdpMLineIndex,
+    });
+    return { code: 'OK' };
+  }
+
+  private async isVoicePeer(client: AuthenticatedSocket, meetingId: string): Promise<boolean> {
+    return this.joinedVoiceMeetings.get(client.id)?.has(meetingId) === true;
+  }
+
+  private async updateVoiceState(
+    payload: VoiceJoinPayload,
+    client: AuthenticatedSocket,
+    mutate: (participant: VoiceParticipant) => VoiceParticipant,
+  ) {
+    const participants = this.voiceParticipants.get(payload.meetingId);
+    const current = participants?.get(client.id);
+    if (!participants || !current) {
+      return { code: 'FORBIDDEN', message: 'Not in this voice call' };
+    }
+    participants.set(client.id, mutate(current));
+    const event: VoiceParticipantsEvent = {
+      workspaceId: payload.workspaceId,
+      meetingId: payload.meetingId,
+      participants: [...participants.values()],
+    };
+    this.server.to(voiceRoom(payload.meetingId)).emit('voice.participants', event);
+    return { code: 'OK' };
+  }
+
+  private async dropVoiceParticipant(
+    meetingId: string,
+    socketId: string,
+    userId?: string,
+  ): Promise<void> {
+    const participants = this.voiceParticipants.get(meetingId);
+    if (!participants?.delete(socketId)) {
+      return;
+    }
+    if (participants.size === 0) {
+      this.voiceParticipants.delete(meetingId);
+    }
+    const event: VoiceLeftEvent = {
+      workspaceId: '',
+      socketId,
+      userId: userId ?? '',
+      meetingId,
+    };
+    this.server.to(voiceRoom(meetingId)).emit('voice.left', event);
+  }
+
+  private trackVoiceJoin(socketId: string, meetingId: string): void {
+    const joined = this.joinedVoiceMeetings.get(socketId) ?? new Set<string>();
+    joined.add(meetingId);
+    this.joinedVoiceMeetings.set(socketId, joined);
+  }
+
+  private untrackVoice(socketId: string, meetingId: string): void {
+    const joined = this.joinedVoiceMeetings.get(socketId);
+    if (joined) {
+      joined.delete(meetingId);
+      if (joined.size === 0) {
+        this.joinedVoiceMeetings.delete(socketId);
+      }
+    }
   }
 
   private async handleTyping(

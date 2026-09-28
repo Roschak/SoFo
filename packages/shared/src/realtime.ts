@@ -13,6 +13,11 @@ export const workspaceRoom = (workspaceId: string): string =>
 
 export const userRoom = (userId: string): string => `${ROOM_USER_PREFIX}${userId}`;
 
+export const ROOM_VOICE_PREFIX = 'voice:';
+
+/** Per-meeting voice call room (WebRTC signaling scope). */
+export const voiceRoom = (meetingId: string): string => `${ROOM_VOICE_PREFIX}${meetingId}`;
+
 export interface MessageRealtimeView {
   readonly id: string;
   readonly channelId: string;
@@ -66,6 +71,76 @@ export interface TypingPayload {
   readonly workspaceId: string;
   readonly channelId: string;
 }
+
+/* ------------------------------------------------------------------ */
+/* Voice chat (WebRTC signaling) — Discord-style in-app meeting calls  */
+/* ------------------------------------------------------------------ */
+
+/** One participant of an active in-meeting voice call. */
+export interface VoiceParticipant {
+  /** Signaling socket id — the peer connection target. */
+  readonly socketId: string;
+  readonly userId: string;
+  readonly displayName: string;
+  readonly muted: boolean;
+  /** Camera on when present (audio-only participants have it false). */
+  readonly cameraOn: boolean;
+}
+
+export interface VoiceJoinPayload {
+  readonly workspaceId: string;
+  readonly meetingId: string;
+}
+
+/** Broadcast when the participant list or mute/camera states change. */
+export interface VoiceParticipantsEvent {
+  readonly workspaceId: string;
+  readonly meetingId: string;
+  readonly participants: readonly VoiceParticipant[];
+}
+
+/** SDP offer/answer relay — directed at one peer, relayed by the server. */
+export interface VoiceSdpPayload {
+  readonly workspaceId: string;
+  readonly meetingId: string;
+  readonly targetSocketId: string;
+  readonly sdp: string;
+  readonly type: 'offer' | 'answer';
+}
+
+/** ICE candidate relay. */
+export interface VoiceIcePayload {
+  readonly workspaceId: string;
+  readonly meetingId: string;
+  readonly targetSocketId: string;
+  readonly candidate: string;
+  readonly sdpMid: string | null;
+  readonly sdpMLineIndex: number | null;
+}
+
+/** A peer left the voice call (graceful leave or abrupt disconnect). */
+export interface VoiceLeftEvent {
+  readonly workspaceId: string;
+  readonly meetingId: string;
+  readonly socketId: string;
+  readonly userId: string;
+}
+
+export const VOICE_SERVER_EVENTS = [
+  'voice.join',
+  'voice.leave',
+  'voice.mute',
+  'voice.camera',
+  'voice.sdp',
+  'voice.ice',
+] as const;
+
+export const VOICE_CLIENT_EVENTS = [
+  'voice.participants',
+  'voice.sdp',
+  'voice.ice',
+  'voice.left',
+] as const;
 
 export const REALTIME_CLIENT_EVENTS = [
   'message.created',

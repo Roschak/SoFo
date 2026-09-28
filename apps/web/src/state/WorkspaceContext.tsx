@@ -44,6 +44,8 @@ interface WorkspaceContextValue {
   onlineUserIds: string[];
   typingUserIds: string[];
   connection: ConnectionStatus;
+  /** Live realtime socket — shared with voice chat and other sockets consumers. */
+  socket: ReturnType<typeof createSocketConnection> | null;
   loadingWorkspaces: boolean;
   loadingMessages: boolean;
   error: string | null;
@@ -374,6 +376,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       onlineUserIds,
       typingUserIds,
       connection,
+      socket: socketRef.current,
       loadingWorkspaces,
       loadingMessages,
       error,
