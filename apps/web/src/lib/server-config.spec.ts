@@ -30,6 +30,7 @@ afterEach(() => {
   resetServerUrl();
   delete (globalThis as Record<string, unknown>).localStorage;
   delete (globalThis as Record<string, unknown>).Capacitor;
+  delete (globalThis as Record<string, unknown>).location;
 });
 
 describe('validateServerUrl', () => {
@@ -97,6 +98,26 @@ describe('isNativePlatform / resolveApiBase', () => {
     saveServerUrl('http://192.168.1.20:4001');
     expect(isNativePlatform()).toBe(true);
     expect(resolveApiBase()).toBe('http://192.168.1.20:4001/api/v1');
+  });
+
+  it('detects the Tauri desktop shell (EXE) via the tauri.localhost origin', () => {
+    (globalThis as Record<string, unknown>).localStorage = fakeStorage();
+    (globalThis as Record<string, unknown>).location = {
+      protocol: 'http:',
+      hostname: 'tauri.localhost',
+    };
+    saveServerUrl('http://192.168.68.107:4001');
+    expect(isNativePlatform()).toBe(true);
+    expect(resolveApiBase()).toBe('http://192.168.68.107:4001/api/v1');
+  });
+
+  it('treats a normal https site as web even with a Capacitor-less UA', () => {
+    (globalThis as Record<string, unknown>).location = {
+      protocol: 'https:',
+      hostname: 'sofo.example.com',
+    };
+    expect(isNativePlatform()).toBe(false);
+    expect(resolveApiBase()).toBe('/api/v1');
   });
 });
 

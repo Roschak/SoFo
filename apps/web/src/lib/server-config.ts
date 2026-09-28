@@ -14,9 +14,10 @@ const STORAGE_KEY = 'sofo.serverUrl';
 export const DEFAULT_SERVER_URL = 'http://192.168.68.107:4001';
 
 /**
- * True when the app runs inside the Capacitor native shell. Uses the official
- * Capacitor global when available and falls back to a UA sniff for older
- * WebView builds that do not expose it.
+ * True when the app runs inside a native shell (Capacitor Android APK or the
+ * Tauri Windows EXE). Uses the official Capacitor global when available and
+ * falls back to shell-specific UA/origin signals. Only native shells load the
+ * API from the configurable server URL; plain web stays same-origin.
  */
 export function isNativePlatform(): boolean {
   const cap = (globalThis as Record<string, unknown>)['Capacitor'];
@@ -24,7 +25,16 @@ export function isNativePlatform(): boolean {
     return Boolean((cap as { isNativePlatform: () => boolean }).isNativePlatform());
   }
   const ua = typeof navigator !== 'undefined' ? navigator.userAgent : '';
-  return /Capacitor/i.test(ua);
+  if (/Capacitor/i.test(ua)) return true;
+  // Tauri desktop shell: the webview serves assets from a tauri:// origin or
+  // an http(s)://tauri.localhost host (Windows WebView2) — never the real API.
+  if (typeof location !== 'undefined') {
+    if (location.protocol === 'tauri:') return true;
+    if (location.hostname === 'tauri.localhost' || location.hostname.endsWith('.tauri.localhost')) {
+      return true;
+    }
+  }
+  return false;
 }
 
 /** Reject anything that is not a clean origin like `http://192.168.1.5:4001`. */
