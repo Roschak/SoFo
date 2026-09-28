@@ -15,6 +15,7 @@
 | `05-SESI-7-REKAP.md` | Rekap Sesi #7: recurrence kalender, feedback loop Phase 27, runbook |
 | `06-BETA-PHASE26.md` | Phase 26 Beta: artefak rilis, daftar tester, distribusi, checklist |
 | `07-FEEDBACK-FORM-TEMPLATE.md` | Template formulir feedback tester (Google Forms / chat broadcast) |
+| `08-BETA-DISTRIBUSI-SATUHALAMAN.md` | Panduan distribusi satu halaman, siap kirim ke tester |
 
 ## Urutan baca saat membuka sesi baru
 

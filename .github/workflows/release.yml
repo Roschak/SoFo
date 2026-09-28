@@ -63,7 +63,9 @@ jobs:
           distribution: temurin
           java-version: 17
 
-      - uses: android-actions/setup-android@v3
+      # NOTE: no android-actions/setup-android — v3 installs the removed legacy
+      # `tools` package and fails; ubuntu-latest ships the Android SDK preinstalled
+      # with licenses accepted (gradlew picks it up via ANDROID_HOME).
 
       - name: Install dependencies
         run: npm ci

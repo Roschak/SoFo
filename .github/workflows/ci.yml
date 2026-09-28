@@ -20,6 +20,11 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # Workspace-hoisted @prisma/client postinstall cannot find apps/api/prisma
+      # schema — generate explicitly or every Prisma model type is missing (TS7006).
+      - name: Generate Prisma client
+        run: npm run prisma:generate --workspace @sofo/api
+
       - name: Build shared (path alias prerequisite)
         run: npm run build --workspace @sofo/shared
 
@@ -73,6 +78,9 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Generate Prisma client
+        run: npm run prisma:generate --workspace @sofo/api
 
       - name: Build shared + API
         run: |

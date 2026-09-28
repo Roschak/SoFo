@@ -5,6 +5,43 @@
 
 ---
 
+## Sesi #8 lanjutan 2 — 2026-09-28 — Regression penuh via LAN + fix CI/Release — SELESAI ✅
+
+### Regression penuh di server LAN (semua hijau, 195/195)
+| Suite | Hasil |
+|---|---|
+| beta-flow.mjs | **46/46** |
+| http-smoke.mjs | **134/134** |
+| realtime-smoke.mjs | **15/15** |
+
+(Gotcha terkonfirmasi ulang: restart API antar suite — rate limit auth 20/5menit
+membuat realtime-smoke kena UNAUTHENTICATED kalau dijalankan tepat setelah http.)
+
+### CI/Release gagal — akar masalah ditemukan & diperbaiki
+1. **Release/EXE (tag v0.1.0-beta.2)**: `icons/icon.ico not found` — folder
+   `src-tauri/icons/` TIDAK PERNAH ter-commit (kosong sejak dibuat). Fix:
+   `npx tauri icon` dari launcher Android → 38 file ikon (ico/icns/png +
+   android/ios) ter-commit. Android res tidak berubah (regenerate identik).
+2. **Release/APK job**: `android-actions/setup-android@v3` gagal — menginstall
+   paket legacy `tools` yang sudah DIHAPUS dari SDK repo. Fix: hapus step
+   (ubuntu-latest sudah punya SDK preinstalled + lisensi accepted).
+3. **CI (merah sejak 22 Sep — BUKAN karena perubahan Sesi #8)**:
+   `npm ci` tidak menjalankan `prisma generate` (postinstall hoisted workspace
+   tidak menemukan schema apps/api) → Prisma client tidak tergenerate →
+   ratusan TS7006 implicit-any. Fix: step eksplisit `prisma:generate` di kedua
+   job quality + smoke.
+
+### Dokumen baru
+- `docs/notes/08-BETA-DISTRIBUSI-SATUHALAMAN.md` — panduan distribusi satu
+  halaman siap kirim ke tester (setup, 11 skenario, cara melapor, batasan).
+
+### Yang BELUM selesai
+- Re-run Release workflow (tag baru `v0.1.0-beta.2b` atau re-run manual) untuk
+  memastikan EXE+APK hijau di CI; ambil artifact `sofo-windows-exe`.
+- Isi daftar tester + kirim APK beta.2 + link form (owner).
+
+---
+
 ## Sesi #8 lanjutan — 2026-09-28 — Beta flow E2E + template formulir feedback — SELESAI ✅
 
 ### Yang sudah selesai
