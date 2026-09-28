@@ -10,7 +10,7 @@ if not errorlevel 1 goto docker_ok
 echo [1/4] Menyalakan Docker Desktop (tunggu 30-60 detik)...
 start "" "%LOCALAPPDATA%\Programs\DockerDesktop\Docker Desktop.exe"
 :waitdocker
-timeout /t 5 /nobreak >nul
+call :sleep 5
 docker info >nul 2>&1
 if errorlevel 1 goto waitdocker
 :docker_ok
@@ -34,7 +34,7 @@ rem --- 4. Tunggu health OK ---
 echo [4/4] Menunggu server siap...
 set TRIES=0
 :waitloop
-timeout /t 3 /nobreak >nul
+call :sleep 3
 curl -s -m 3 http://localhost:4001/api/v1/health | findstr /c:"ok" >nul 2>&1
 if not errorlevel 1 goto ready
 set /a TRIES+=1
@@ -58,3 +58,9 @@ echo   selama sesi beta. (Catatan: kalau IP WiFi
 echo   berubah, edit IP di file ini.)
 echo ============================================
 pause
+exit /b 0
+
+rem --- subroutine delay (dalam detik) ---
+:sleep
+ping -n %~1 127.0.0.1 >nul 2>&1
+exit /b 0
