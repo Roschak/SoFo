@@ -1,23 +1,33 @@
 # SOFO Beta 2 — Panduan Tester (Satu Halaman)
 
 > Versi: **v0.1.0-beta.2** · Server: laptop owner via WiFi lokal (Opsi A)
-> Kirim halaman ini + APK + link formulir feedback ke tester.
+> Unduh semua dari: **github.com/Roschak/SoFo/releases/tag/v0.1.0-beta.2**
 
 ---
 
 ## 📦 Yang kamu butuhkan (±5 menit)
 
-1. HP/tablet **Android 8.0+** + APK terlampir (`sofo-v0.1.0-beta.2-release.apk`, 3.3 MB)
-2. **WiFi yang sama dengan laptop owner** — server ada di laptop, bukan internet
-3. Email apa saja untuk daftar (boleh email palsu — ini data uji!)
+**Android (HP/tablet 8.0+):** `sofo-v0.1.0-beta.2-release.apk` (3.3 MB)
+**Windows (laptop/PC):** `SOFO_0.1.0-beta.2_x64-setup.exe` (installer) atau
+`sofo-desktop.exe` (portable, tanpa install)
+Plus: **WiFi yang sama dengan laptop owner** — server ada di laptop, bukan
+internet · Email apa saja untuk daftar (boleh email palsu — data uji!)
 
 ## 🚀 Setup (sekali)
 
-1. Buka APK → izinkan *"Install dari sumber tidak dikenal"* → install
+**Android:**
+1. Tap APK yang diunduh → izinkan *"Install dari sumber tidak dikenal"* → install
 2. Buka **SOFO** → di layar login, bagian **Server**:
    pastikan berisi `http://192.168.68.107:4001` → tap **Simpan & uji koneksi**
    → tunggu **"Terhubung (… ms)"**
    *(Gagal? Cek WiFi, tanya owner apakah server hidup, atau tap "Pakai default")*
+3. **Daftar** akun baru → login
+
+**Windows:**
+1. Unduh `SOFO_0.1.0-beta.2_x64-setup.exe` → klik dua kali → ikuti wizard
+   (atau `sofo-desktop.exe` untuk jalankan langsung tanpa install)
+2. Di layar login, isi **Server** `http://192.168.68.107:4001` →
+   **Simpan & uji koneksi** sampai "Terhubung"
 3. **Daftar** akun baru → login
 
 ## ✅ Yang dicoba (±30 menit, urut bebas)
