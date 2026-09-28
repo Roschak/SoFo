@@ -1,16 +1,19 @@
 # SOFO — Phase 26 BETA: Distribusi & Daftar Tester (PRD §97)
 
-> Status: **BETA 2 (`v0.1.0-beta.2`, versionCode 2)** — dibangun 2026-09-28.
-> Berisi seluruh fitur: MVP P0+P1, moderasi komunitas, portal client, recurrence
-> kalender, feedback loop (Phase 27), **+ konfigurasi Server URL in-app**.
+> Status: **BETA 3 (`v0.1.0-beta.3`, versionCode 3)** — dibangun 2026-09-28.
+> Berisi seluruh fitur beta.2 **+ voice chat WebRTC di meeting** (Discord-style:
+> join audio/kamera, mute, daftar peserta live, call tetap hidup antar-tab).
 
 ## 1. Artefak rilis (SUDAH DIBANGUN & terverifikasi)
 
+**Rilis resmi: https://github.com/Roschak/SoFo/releases/tag/v0.1.0-beta.3**
+(5 aset: APK signed, APK debug, EXE installer, EXE portable, panduan tester)
+
 | File | Target | Catatan |
 |---|---|---|
-| `data/sofo-v0.1.0-beta.2-release.apk` (3.3 MB) | Android | **Signed release** — diverifikasi `apksigner` (CN=SOFO Souloffice, SHA-256 `9355dad6…`, konsisten dgn beta.1) |
-| `data/sofo-v0.1.0-beta.2-debug.apk` (4.2 MB) | Android | Debug — untuk tester yang butuh log/error mentah |
-| ~~`data/sofo-v0.1.0-beta.1-*.apk`~~ | — | **DISUSULKAN** — server URL lama `10.0.2.2` (emulator saja), tanpa layar Server URL |
+| `data/sofo-v0.1.0-beta.3-release.apk` (3.3 MB) | Android | **Signed release** — apksigner OK (`9355dad6…`, konsisten sejak beta.1) |
+| `data/sofo-v0.1.0-beta.3-debug.apk` (4.2 MB) | Android | Debug — untuk pelaporan detail |
+| `SOFO_0.1.0-beta.3_x64-setup.exe` / `sofo-desktop.exe` | Windows | Dibangun CI (run tag v0.1.0-beta.3), termasuk fix Tauri server URL |
 
 Perubahan beta.2 vs beta.1: default server URL → `http://192.168.68.107:4001`
 (laptop owner), layar **Server** di halaman login (native only) untuk ganti/uji

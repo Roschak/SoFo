@@ -5,6 +5,64 @@
 
 ---
 
+## Sesi #9 — 2026-09-28 — Voice chat di meeting (WebRTC, ala Discord) — SELESAI ✅
+
+> Permintaan owner: "meeting di aplikasi SOFO jadi kayak Discord maupun Zoom".
+> Diwujudkan sebagai **voice chat WebRTC in-app** (mesh P2P) + kamera opsional —
+> MVP yang tepat untuk beta LAN 2–5 orang; SFU/TURN = tahap berikutnya.
+
+### Yang sudah selesai
+- **Kontrak shared** (`packages/shared/src/realtime.ts`): `VoiceParticipant`
+  (ber-basis `socketId`), events `voice.join/leave/mute/camera` (client→server),
+  `voice.participants/sdp/ice/left` (server→client), `voiceRoom(meetingId)`.
+- **Gateway** (`realtime.gateway.ts`): join permission-gated (`meeting.join`),
+  state per-participant (muted/cameraOn) di-broadcast, **SDP/ICE relay terarah**
+  per-targetSocketId (ditolak utk yang bukan peserta voice), cleanup otomatis
+  saat disconnect, state disconnect-safe (Map per meeting, tracked per socket).
+- **Web engine** (`lib/voice-chat.ts`): getUserMedia (echo cancel + noise
+  suppress), mesh `RTCPeerConnection` per peer, **inisiasi offer deterministik**
+  (socketId lebih kecil = initiator → tanpa glare, tanpa rollback), kamera lazy
+  join belakangan, teardown rapi (track.stop).
+- **UI**: `VoiceProvider` global (call tetap hidup antar tab), `useVoiceChat`
+  hook, `VoicePanel` di MeetingsView — join voice / join dengan kamera /
+  mute / kamera / keluar, daftar peserta live + badge state, preview kamera,
+  `<audio>` autoplay per peer.
+- **Android**: izin `RECORD_AUDIO` + `CAMERA` + `MODIFY_AUDIO_SETTINGS`.
+- **Tests**: `voice-smoke.mjs` **15/15** (join, participants broadcast,
+  mute/camera, relay SDP+ICE terarah, outsider ditolak, non-voice-member
+  relay ditolak, leave + **disconnect cleanup**).
+- **Regression via LAN**: beta-flow 46/46 + http 134/134 + realtime 15/15.
+- **Unit**: 238/238 (API 127 + web 103 (+2 Tauri detect) + shared 8).
+  Lint/typecheck 0 error; build semua workspace sukses.
+- **Rilis**: APK **v0.1.0-beta.3** (versionCode 3) signed lokal (signature
+  konsisten); CI + Release tag `v0.1.0-beta.3` hijau; **GitHub Release live**
+  (5 aset: APK release/debug, EXE installer, EXE portable, panduan).
+  EXE dibangun dari kode voice + fix Tauri server URL (Sesi #8 lt.2).
+
+### Keputusan / temuan
+- Broadcast `voice.participants` HANYA ke anggota voice room — smoke pertama
+  gagal karena menunggu event di socket yang belum join (bug test, bukan API).
+  Setelah join, SEMUA peserta menerima update — didokumentasikan di smoke.
+- `guest2.id` = undefined setelah `disconnect()` — smoke menyimpan socketId
+  dulu sebelum disconnect (bug test kedua, diperbaiki).
+- Deterministic initiator (bukan polite/impolite full RFC 8829) dipilih karena
+  server relay mengizinkan offer/answer berpasangan — lebih sederhana & cukup.
+- STUN Google dipakai utk fallback lintas-subnet; LAN sama-konek via host
+  candidates. TURN = backlog utk NAT ketat.
+
+### Yang BELUM selesai (opsional — setelah feedback beta)
+- Screen share, recording, indikator speaking (audio level), grid video besar.
+- SFU (mediasoup/LiveKit) + TURN server bila peserta >5 / lintas NAT.
+- Push FCM, i18n, Redis adapter (lihat 03-BELUM-DIKERJAKAN).
+
+### Peringatan
+- Voice butuh **HTTPS atau localhost** di beberapa browser utk getUserMedia —
+  di APK WebView & EXE Tauri aman (bukan konteks browser web); di Chrome
+  desktop ke `http://192.168.x.x` akses mic DIBLOKIR — pakai EXE/APK, atau
+  VPS+HTTPS (Opsi B) bila ingin voice dari browser.
+
+---
+
 ## Sesi #8 lanjutan 3 — 2026-09-28 — GitHub Release resmi v0.1.0-beta.2 — SELESAI ✅
 
 ### Yang sudah selesai

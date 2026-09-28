@@ -34,6 +34,11 @@
   `rustup default stable-gnu` bila ingin eksperimen lokal tanpa VS).
 
 ## 3. Sisa item lanjutan (opsional / skala berikutnya)
+- [x] **Voice chat di meeting (WebRTC mesh, ala Discord)** — SELESAI Sesi #9:
+      join audio/kamera, mute, daftar peserta live, relay signaling
+      permission-gated, disconnect cleanup; voice-smoke 15/15; dirilis di
+      beta.3 (APK + EXE, GitHub Release live).
+      Lanjutan opsional: screen share, recording, SFU/TURN (>5 peserta).
 - [x] **Event recurrence/kalender berulang** — SELESAI Sesi #7 (DAILY/WEEKLY,
   expansion per query, UI + test).
 - [x] **Feedback loop (Phase 27)** — SELESAI Sesi #7 (Feedback + FeedbackVote,

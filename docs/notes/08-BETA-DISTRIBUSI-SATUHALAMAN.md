@@ -1,17 +1,19 @@
-# SOFO Beta 2 — Panduan Tester (Satu Halaman)
+# SOFO Beta 3 — Panduan Tester (Satu Halaman)
 
-> Versi: **v0.1.0-beta.2** · Server: laptop owner via WiFi lokal (Opsi A)
-> Unduh semua dari: **github.com/Roschak/SoFo/releases/tag/v0.1.0-beta.2**
+> Versi: **v0.1.0-beta.3** (baru: **voice chat di meeting!**) · Server: laptop
+> owner via WiFi lokal (Opsi A)
+> Unduh semua dari: **github.com/Roschak/SoFo/releases/tag/v0.1.0-beta.3**
 
 ---
 
 ## 📦 Yang kamu butuhkan (±5 menit)
 
-**Android (HP/tablet 8.0+):** `sofo-v0.1.0-beta.2-release.apk` (3.3 MB)
-**Windows (laptop/PC):** `SOFO_0.1.0-beta.2_x64-setup.exe` (installer) atau
+**Android (HP/tablet 8.0+):** `sofo-v0.1.0-beta.3-release.apk` (3.3 MB)
+**Windows (laptop/PC):** `SOFO_0.1.0-beta.3_x64-setup.exe` (installer) atau
 `sofo-desktop.exe` (portable, tanpa install)
 Plus: **WiFi yang sama dengan laptop owner** — server ada di laptop, bukan
 internet · Email apa saja untuk daftar (boleh email palsu — data uji!)
+Punya beta.2? **Update ke beta.3** — ada voice chat + perbaikan koneksi EXE.
 
 ## 🚀 Setup (sekali)
 
@@ -38,7 +40,7 @@ internet · Email apa saja untuk daftar (boleh email palsu — data uji!)
 | 2 | Undang anggota lain (email yang sudah terdaftar), ubah role-nya |
 | 3 | **Chat**: kirim, edit, hapus pesan sendiri, reply (thread) — buka di 2 HP biar terlihat realtime |
 | 4 | Upload file (maks 25 MB), download, hapus |
-| 5 | **Meeting**: buat → mulai → 2 orang tulis live notes → akhiri |
+| 5 | **Meeting**: buat → mulai → 🎙️ **Ikut voice (BARU!)** → coba bicara/mute/kamera dengan 2 HP → tulis live notes → akhiri |
 | 6 | Project + task → assign ke anggota → geser kartu (kanban) |
 | 7 | **Kalender**: buat event sekali + event **berulang** (baru!) → cek pengingat |
 | 8 | ENTERPRISE saja: clock in/out presensi, ajukan cuti (request) |
@@ -66,4 +68,4 @@ Setiap laporan langsung diproses — kamu akan dapat **notifikasi keputusan**
 di aplikasi (diterima/ditolak/masuk backlog). Loop-nya tertutup!
 
 ---
-*SOFO v0.1.0-beta.2 · Souloffice · 2026-09-28*
+*SOFO v0.1.0-beta.3 · Souloffice · 2026-09-28*
